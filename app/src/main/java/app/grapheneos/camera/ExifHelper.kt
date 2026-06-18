@@ -1,10 +1,10 @@
 package app.grapheneos.camera
 
 import androidxc.exifinterface.media.ExifInterface
-import java.util.TimeZone
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 
 private val exifAttributes = arrayOf(

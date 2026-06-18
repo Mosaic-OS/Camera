@@ -24,7 +24,6 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.RadioGroup
 import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.ToggleButton
@@ -45,7 +44,6 @@ import app.grapheneos.camera.ui.activities.MainActivity
 import app.grapheneos.camera.ui.activities.MoreSettings
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.materialswitch.MaterialSwitch
-import com.google.android.material.radiobutton.MaterialRadioButton
 import java.util.Collections
 import kotlin.math.max
 
@@ -291,29 +289,19 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
                 ) {
 
                     val selectedOption = timerSpinner.selectedItem.toString()
+                    val seconds = parseTimeOptionSeconds(selectedOption)
 
-                    if (selectedOption == "Off") {
+                    if (seconds == null) {
+                        mActivity.showMessage(
+                            getString(R.string.unexpected_error_while_setting_timer)
+                        )
+                    } else if (seconds == 0) {
                         mActivity.timerDuration = 0
                         mActivity.cbText.visibility = View.INVISIBLE
                     } else {
-
-                        try {
-                            val durS = selectedOption.substring(0, selectedOption.length - 1)
-                            val dur = durS.toInt()
-
-                            mActivity.timerDuration = dur
-
-                            mActivity.cbText.text = selectedOption
-                            mActivity.cbText.visibility = View.VISIBLE
-
-                        } catch (exception: Exception) {
-
-                            mActivity.showMessage(
-                                getString(R.string.unexpected_error_while_setting_focus_timeout)
-                            )
-
-                        }
-
+                        mActivity.timerDuration = seconds
+                        mActivity.cbText.text = selectedOption
+                        mActivity.cbText.visibility = View.VISIBLE
                     }
 
                 }
@@ -469,28 +457,30 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
     }
 
 
+    // time_options entries are an "off" label or a duration with a
+    // localized unit suffix. Strip non-digits so parsing works in any language.
+    private fun parseTimeOptionSeconds(option: String): Int? {
+        val digits = option.filter { it.isDigit() }
+        return if (digits.isEmpty()) 0 else digits.toIntOrNull()
+    }
+
     fun updateFocusTimeout(selectedOption: String) {
 
-        if (selectedOption == "Off") {
-            camConfig.focusTimeout = 0
-        } else {
+        val seconds = parseTimeOptionSeconds(selectedOption)
 
-            try {
-                val durS = selectedOption.substring(0, selectedOption.length - 1)
-                val dur = durS.toLong()
-
-                camConfig.focusTimeout = dur
-
-            } catch (exception: Exception) {
-
-                mActivity.showMessage(
-                    getString(R.string.unexpected_error_while_setting_focus_timeout)
-                )
-
-            }
+        if (seconds == null) {
+            mActivity.showMessage(
+                getString(R.string.unexpected_error_while_setting_focus_timeout)
+            )
+            return
         }
 
-        focusTimeoutSpinner.setSelection(timeOptions.indexOf(selectedOption), false)
+        camConfig.focusTimeout = seconds.toLong()
+
+        // selectedOption may be the stored canonical value or a localized spinner label.
+        // Match the spinner entry by parsed duration so the selection is correct per-locale.
+        val index = timeOptions.indexOfFirst { parseTimeOptionSeconds(it) == seconds }
+        focusTimeoutSpinner.setSelection(if (index >= 0) index else 0, false)
     }
 
     fun updateVideoQuality(choice: String, resCam: Boolean = true) {
@@ -524,7 +514,14 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
 
     private var wasSelfIlluminationOn = false
 
+    private val selfIlluminationAnimators = mutableListOf<ValueAnimator>()
+
     fun selfIllumination() {
+
+        // Cancel any in-flight animators from a previous toggle so they stop holding view
+        // references and don't fight a new transition.
+        selfIlluminationAnimators.forEach { it.cancel() }
+        selfIlluminationAnimators.clear()
 
         if (camConfig.selfIlluminate) {
 
@@ -566,10 +563,10 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
                 mActivity.tabLayout.setSelectedTabIndicatorColor(animator.animatedValue as Int)
             }
 
-            colorAnimation1.start()
-            colorAnimation2.start()
-            colorAnimation3.start()
-            colorAnimation4.start()
+            selfIlluminationAnimators.addAll(
+                listOf(colorAnimation1, colorAnimation2, colorAnimation3, colorAnimation4)
+            )
+            selfIlluminationAnimators.forEach { it.start() }
 
             setBrightness(1f)
 
@@ -612,10 +609,10 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
                 mActivity.tabLayout.setSelectedTabIndicatorColor(animator.animatedValue as Int)
             }
 
-            colorAnimation1.start()
-            colorAnimation2.start()
-            colorAnimation3.start()
-            colorAnimation4.start()
+            selfIlluminationAnimators.addAll(
+                listOf(colorAnimation1, colorAnimation2, colorAnimation3, colorAnimation4)
+            )
+            selfIlluminationAnimators.forEach { it.start() }
 
             setBrightness(getSystemBrightness())
         }

@@ -5,7 +5,6 @@ import android.content.Context
 import android.os.CountDownTimer
 import android.util.AttributeSet
 import android.view.Gravity
-import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.appcompat.widget.AppCompatTextView
@@ -105,33 +104,33 @@ class CountDownTimerUI @JvmOverloads constructor(
         }
         layoutParams = params
 
-        mActivity.settingsIcon.visibility = View.INVISIBLE
-        mActivity.thirdOption.visibility = View.INVISIBLE
-        mActivity.flipCameraCircle.visibility = View.INVISIBLE
-        mActivity.tabLayout.visibility = View.INVISIBLE
-        mActivity.cancelButtonView.visibility = View.INVISIBLE
-        mActivity.cbText.visibility = View.INVISIBLE
-        mActivity.cbCross.visibility = View.VISIBLE
+        mActivity.settingsIcon.visibility = INVISIBLE
+        mActivity.thirdOption.visibility = INVISIBLE
+        mActivity.flipCameraCircle.visibility = INVISIBLE
+        mActivity.tabLayout.visibility = INVISIBLE
+        mActivity.cancelButtonView.visibility = INVISIBLE
+        mActivity.cbText.visibility = INVISIBLE
+        mActivity.cbCross.visibility = VISIBLE
 
-        visibility = View.VISIBLE
+        visibility = VISIBLE
         isRunning = true
     }
 
     private fun onTimerEnd(isCancelled: Boolean = false) {
-        mActivity.settingsIcon.visibility = View.VISIBLE
-        mActivity.flipCameraCircle.visibility = View.VISIBLE
-        mActivity.cancelButtonView.visibility = View.VISIBLE
-        mActivity.cbCross.visibility = View.INVISIBLE
+        mActivity.settingsIcon.visibility = VISIBLE
+        mActivity.flipCameraCircle.visibility = VISIBLE
+        mActivity.cancelButtonView.visibility = VISIBLE
+        mActivity.cbCross.visibility = INVISIBLE
 
         if (mActivity !is CaptureActivity) {
-            mActivity.cbText.visibility = View.VISIBLE
-            mActivity.tabLayout.visibility = View.VISIBLE
-            mActivity.thirdOption.visibility = View.VISIBLE
+            mActivity.cbText.visibility = VISIBLE
+            mActivity.tabLayout.visibility = VISIBLE
+            mActivity.thirdOption.visibility = VISIBLE
         } else if (isCancelled) {
-            mActivity.cbText.visibility = View.VISIBLE
+            mActivity.cbText.visibility = VISIBLE
         }
 
-        visibility = View.GONE
+        visibility = GONE
         isRunning = false
     }
 

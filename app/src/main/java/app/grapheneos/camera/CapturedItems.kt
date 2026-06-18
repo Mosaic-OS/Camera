@@ -12,9 +12,9 @@ import android.provider.BaseColumns
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.util.Log
+import androidx.core.net.toUri
 import app.grapheneos.camera.CamConfig.SettingValues
 import app.grapheneos.camera.util.edit
-import kotlin.jvm.Throws
 
 typealias ItemType = Int
 const val ITEM_TYPE_IMAGE: ItemType = 0
@@ -125,7 +125,7 @@ object CapturedItems {
         val nameColumn = 1
 
         try {
-            resolver.query(volumeUri, columns, null, null)?.use {
+            resolver.query(volumeUri, columns, null, null)?.use { it ->
                 dest.ensureCapacity(it.count)
 
                 while (it.moveToNext()) {
@@ -143,15 +143,16 @@ object CapturedItems {
     }
 
     private fun collectSafItems(resolver: ContentResolver, treeUri: Uri, dest: ArrayList<CapturedItem>) {
-        val treeId = DocumentsContract.getTreeDocumentId(treeUri)
-        val childDocumentsUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, treeId)
-
         val columns = arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME)
         val idColumn = 0
         val nameColumn = 1
 
         try {
-            resolver.query(childDocumentsUri, columns, null, null)?.use {
+            // getTreeDocumentId throws IllegalArgumentException for a non-tree (e.g. legacy/corrupt) URI.
+            val treeId = DocumentsContract.getTreeDocumentId(treeUri)
+            val childDocumentsUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, treeId)
+
+            resolver.query(childDocumentsUri, columns, null, null)?.use { it ->
                 dest.ensureCapacity(it.count)
 
                 while (it.moveToNext()) {
@@ -174,7 +175,7 @@ object CapturedItems {
     fun maybeGetCurentSafTree(prefs: SharedPreferences): Uri? {
         return prefs.getString(SettingValues.Key.STORAGE_LOCATION, null)?.let {
             if (it != SettingValues.Default.STORAGE_LOCATION) {
-                Uri.parse(it)
+                it.toUri()
             } else {
                 null
             }
@@ -199,8 +200,8 @@ object CapturedItems {
     const val SAF_TREE_SEPARATOR = "\u0000"
 
     fun getPreviousSafTrees(prefs: SharedPreferences): MutableList<Uri> {
-        prefs.getString(SettingValues.Key.PREVIOUS_SAF_TREES, null)?.let {
-            return it.split(SAF_TREE_SEPARATOR).map { Uri.parse(it) }.toMutableList()
+        prefs.getString(SettingValues.Key.PREVIOUS_SAF_TREES, null)?.let { it ->
+            return it.split(SAF_TREE_SEPARATOR).map { it.toUri() }.toMutableList()
         }
         return ArrayList()
     }
@@ -239,9 +240,9 @@ object CapturedItems {
         var checkedLastCapturedItem = false
 
         joinedUris.split(";").forEach { uriString ->
-            val uri = Uri.parse(uriString)
+            val uri = uriString.toUri()
 
-            val authority = uri.authority!!
+            val authority = uri.authority ?: return@forEach
 
             if (!checkedLastCapturedItem) {
                 val columnName = if (authority == MediaStore.AUTHORITY) {
@@ -260,7 +261,7 @@ object CapturedItems {
                             fileName = it.getString(0)
                         }
                     }
-                } catch (ignored: Exception) {}
+                } catch (_: Exception) {}
 
                 fileName?.let {
                     val item = parseCapturedItem(it, uri)
@@ -276,7 +277,12 @@ object CapturedItems {
                 return@forEach
             }
 
-            val treeId = DocumentsContract.getTreeDocumentId(uri)
+            val treeId = try {
+                // Skip legacy/non-tree document URIs that getTreeDocumentId can't parse.
+                DocumentsContract.getTreeDocumentId(uri)
+            } catch (e: Exception) {
+                return@forEach
+            }
             val treeUri = DocumentsContract.buildTreeDocumentUri(authority, treeId)
 
             if (treeUri == currentTreeUri || list.contains(treeUri)
@@ -314,7 +320,7 @@ object CapturedItems {
 
         for (i in prefixLen until end) {
             val ch = fileName[i]
-            if ((ch >= '0' && ch <= '9') || ch == '_') {
+            if ((ch in '0'..'9') || ch == '_') {
                 continue
             }
             return null

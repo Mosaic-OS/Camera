@@ -54,7 +54,12 @@ class VideoCaptureActivity : CaptureActivity() {
 
         this.savedUri = savedUri
 
-        bitmap = previewView.bitmap!!
+        // previewView.bitmap is null if no preview frame has been delivered yet (e.g. recording
+        // stopped before the first frame). Avoid crashing; the video itself is already saved.
+        bitmap = previewView.bitmap ?: run {
+            showMessage(getString(R.string.unable_to_capture_image))
+            return
+        }
 
         cancelButtonView.visibility = View.VISIBLE
 

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <array name="time_options">
+        <item>Ki</item>
+        <item>3mp</item>
+        <item>5mp</item>
+        <item>8mp</item>
+        <item>10mp</item>
+    </array>
+
+</resources>

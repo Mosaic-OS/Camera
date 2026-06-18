@@ -23,7 +23,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Logger;
-import androidxc.exifinterface.media.ExifInterface;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -38,6 +37,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+
+import androidxc.exifinterface.media.ExifInterface;
 
 /**
  * Utility class for modifying metadata on JPEG files.
@@ -55,26 +56,11 @@ public final class Exif {
     private static final String TAG = Exif.class.getSimpleName();
 
     private static final ThreadLocal<SimpleDateFormat> DATE_FORMAT =
-            new ThreadLocal<SimpleDateFormat>() {
-                @Override
-                public SimpleDateFormat initialValue() {
-                    return new SimpleDateFormat("yyyy:MM:dd", Locale.US);
-                }
-            };
+            ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy:MM:dd", Locale.US));
     private static final ThreadLocal<SimpleDateFormat> TIME_FORMAT =
-            new ThreadLocal<SimpleDateFormat>() {
-                @Override
-                public SimpleDateFormat initialValue() {
-                    return new SimpleDateFormat("HH:mm:ss", Locale.US);
-                }
-            };
+            ThreadLocal.withInitial(() -> new SimpleDateFormat("HH:mm:ss", Locale.US));
     private static final ThreadLocal<SimpleDateFormat> DATETIME_FORMAT =
-            new ThreadLocal<SimpleDateFormat>() {
-                @Override
-                public SimpleDateFormat initialValue() {
-                    return new SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.US);
-                }
-            };
+            ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.US));
 
     private static final String KILOMETERS_PER_HOUR = "K";
     private static final String MILES_PER_HOUR = "M";
@@ -329,7 +315,7 @@ public final class Exif {
         try {
             String subsec = Long.toString(now - convertFromExifDateTime(datetime).getTime());
             mExifInterface.setAttribute(ExifInterface.TAG_SUBSEC_TIME, subsec);
-        } catch (ParseException e) {
+        } catch (ParseException ignored) {
         }
     }
 
@@ -628,7 +614,7 @@ public final class Exif {
             String subsec = Long.toString(now - convertFromExifDateTime(datetime).getTime());
             mExifInterface.setAttribute(ExifInterface.TAG_SUBSEC_TIME_ORIGINAL, subsec);
             mExifInterface.setAttribute(ExifInterface.TAG_SUBSEC_TIME_DIGITIZED, subsec);
-        } catch (ParseException e) {
+        } catch (ParseException ignored) {
         }
 
         mRemoveTimestamp = false;
@@ -711,17 +697,12 @@ public final class Exif {
             return new Converter(knots * 1.15078);
         }
 
-        static final class Converter {
-            final double mMph;
-
-            Converter(double mph) {
-                mMph = mph;
-            }
+        record Converter(double mMph) {
 
             double toMetersPerSecond() {
-                return mMph / 2.23694;
-            }
-        }
+                        return mMph / 2.23694;
+                    }
+                }
     }
 
     /**

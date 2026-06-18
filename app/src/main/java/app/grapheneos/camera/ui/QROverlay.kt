@@ -4,11 +4,11 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.BlendMode
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
+import androidx.core.graphics.toColorInt
 
 class QROverlay(context: Context, attrs: AttributeSet) : View(context, attrs) {
     companion object {
@@ -22,7 +22,7 @@ class QROverlay(context: Context, attrs: AttributeSet) : View(context, attrs) {
     }
 
     private val scrimPaint: Paint = Paint().apply {
-        color = Color.parseColor("#99000000")
+        color = "#99000000".toColorInt()
     }
 
     private val eraserPaint: Paint = Paint().apply {

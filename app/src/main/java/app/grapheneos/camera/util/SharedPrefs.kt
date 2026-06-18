@@ -19,7 +19,7 @@ fun EphemeralSharedPrefsNamespace.getPrefs(ctx: Context, name: String, mode: Int
 
             if (cloneOriginal) {
                 val orig = ctx.applicationContext.getSharedPreferences(name, Context.MODE_PRIVATE)
-                orig.all.forEach { k, v ->
+                orig.all.forEach { (k, v) ->
                     prefs.map[k] = v
                 }
             }
@@ -124,7 +124,7 @@ class EphemeralSharedPrefs(val targetSdk: Int) : SharedPreferences {
                 removedKeys.forEach { key ->
                     prefs.map.remove(key)
                 }
-                map.forEach { k, v ->
+                map.forEach { (k, v) ->
                     prefs.map[k] = v
                 }
             }
@@ -144,7 +144,7 @@ class EphemeralSharedPrefs(val targetSdk: Int) : SharedPreferences {
                     it.onSharedPreferenceChanged(prefs, key)
                 }
             }
-            map.forEach { k, _ ->
+            map.forEach { (k, _) ->
                 listeners.forEach {
                     it.onSharedPreferenceChanged(prefs, k)
                 }

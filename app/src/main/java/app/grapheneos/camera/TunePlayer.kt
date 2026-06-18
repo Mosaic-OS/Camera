@@ -2,14 +2,14 @@ package app.grapheneos.camera
 
 import android.content.Context
 import android.media.MediaPlayer
-import android.net.Uri
 import android.os.Handler
-import android.os.SystemClock
+import androidx.core.net.toUri
 import app.grapheneos.camera.ui.activities.MainActivity
 
 private fun prepareMediaPlayer(context: Context, resid: Int, listener: MediaPlayer.OnPreparedListener) {
     MediaPlayer().apply {
-        setDataSource(context, Uri.parse("android.resource://" + context.getPackageName() + "/" + resid))
+        setDataSource(context,
+            ("android.resource://" + context.packageName + "/" + resid).toUri())
         setOnPreparedListener(listener)
         prepareAsync()
     }
@@ -28,15 +28,15 @@ class TunePlayer(val context: MainActivity) {
     private lateinit var vStopPlayer: MediaPlayer
 
     init {
-        prepareMediaPlayer(context, R.raw.image_shot, { player -> shutterPlayer = player })
+        prepareMediaPlayer(context, R.raw.image_shot) { player -> shutterPlayer = player }
 
-        prepareMediaPlayer(context, R.raw.focus_start, { player -> fSPlayer = player })
+        prepareMediaPlayer(context, R.raw.focus_start) { player -> fSPlayer = player }
 
-        prepareMediaPlayer(context, R.raw.timer_increment, { player -> tIPlayer = player })
-        prepareMediaPlayer(context, R.raw.timer_final_second, { player -> tCPlayer = player })
+        prepareMediaPlayer(context, R.raw.timer_increment) { player -> tIPlayer = player }
+        prepareMediaPlayer(context, R.raw.timer_final_second) { player -> tCPlayer = player }
 
-        prepareMediaPlayer(context, R.raw.video_start, { player -> vRecPlayer = player })
-        prepareMediaPlayer(context, R.raw.video_stop, { player -> vStopPlayer = player })
+        prepareMediaPlayer(context, R.raw.video_start) { player -> vRecPlayer = player }
+        prepareMediaPlayer(context, R.raw.video_stop) { player -> vStopPlayer = player }
     }
 
     private fun shouldNotPlayTune(): Boolean {
@@ -56,9 +56,9 @@ class TunePlayer(val context: MainActivity) {
         }
         vRecPlayer.seekTo(0)
         vRecPlayer.start()
-        vRecPlayer.setOnCompletionListener({
+        vRecPlayer.setOnCompletionListener {
             handler.postDelayed(onPlayed, 10)
-        })
+        }
     }
 
     fun playVRStopSound() {
@@ -83,5 +83,14 @@ class TunePlayer(val context: MainActivity) {
         if (shouldNotPlayTune() || !::fSPlayer.isInitialized) return
         fSPlayer.seekTo(0)
         fSPlayer.start()
+    }
+
+    fun release() {
+        if (::shutterPlayer.isInitialized) shutterPlayer.release()
+        if (::fSPlayer.isInitialized) fSPlayer.release()
+        if (::tIPlayer.isInitialized) tIPlayer.release()
+        if (::tCPlayer.isInitialized) tCPlayer.release()
+        if (::vRecPlayer.isInitialized) vRecPlayer.release()
+        if (::vStopPlayer.isInitialized) vStopPlayer.release()
     }
 }

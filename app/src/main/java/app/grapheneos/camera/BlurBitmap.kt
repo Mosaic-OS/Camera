@@ -1,6 +1,7 @@
 package app.grapheneos.camera
 
 import android.graphics.Bitmap
+import androidx.core.graphics.scale
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -10,8 +11,10 @@ object BlurBitmap {
         val radius = 4
         val width = (sentBitmap.width * 0.1f).roundToInt()
         val height = (sentBitmap.height * 0.1f).roundToInt()
-        sentBitmap = Bitmap.createScaledBitmap(sentBitmap, width, height, false)
+        sentBitmap = sentBitmap.scale(width, height, false)
         val bitmap = sentBitmap.copy(sentBitmap.config!!, true)
+        // Recycle the intermediate scaled bitmap (scale() allocates a new one for our 0.1x size).
+        if (sentBitmap !== oBitmap) sentBitmap.recycle()
         val w = bitmap.width
         val h = bitmap.height
         val pix = IntArray(w * h)

@@ -24,6 +24,7 @@ import androidx.camera.video.PendingRecording
 import androidx.camera.video.Recorder
 import androidx.camera.video.Recording
 import androidx.camera.video.VideoRecordEvent
+import androidx.core.net.toUri
 import app.grapheneos.camera.App
 import app.grapheneos.camera.CamConfig
 import app.grapheneos.camera.CapturedItem
@@ -121,7 +122,7 @@ class VideoCapturer(private val mActivity: MainActivity) {
                 uri = contentResolver.insert(CamConfig.videoCollectionUri, contentValues)
                 isPendingMediaStoreUri = true
             } else {
-                val treeUri = Uri.parse(storageLocation)
+                val treeUri = storageLocation.toUri()
                 val treeDocumentUri = getTreeDocumentUri(treeUri)
 
                 uri = DocumentsContract.createDocument(contentResolver, treeDocumentUri, mimeType, fileName)
@@ -140,11 +141,17 @@ class VideoCapturer(private val mActivity: MainActivity) {
             }
         }
         contentResolver.openFileDescriptor(uri,"w")?.let {
-            val outputOptions = FileDescriptorOutputOptions.Builder(it)
-                .setLocation(location)
-                .build()
-            val pendingRecording = recorder.prepareRecording(ctx, outputOptions)
-            return RecordingContext(pendingRecording, uri, it, shouldAddToGallery, isPendingMediaStoreUri)
+            try {
+                val outputOptions = FileDescriptorOutputOptions.Builder(it)
+                    .setLocation(location)
+                    .build()
+                val pendingRecording = recorder.prepareRecording(ctx, outputOptions)
+                return RecordingContext(pendingRecording, uri, it, shouldAddToGallery, isPendingMediaStoreUri)
+            } catch (e: Exception) {
+                // The RecordingContext (which owns/closes the fd) was never returned; close it here.
+                it.close()
+                throw e
+            }
         }
         return null
     }
@@ -174,7 +181,7 @@ class VideoCapturer(private val mActivity: MainActivity) {
 
         val recordingCtx = try {
             createRecordingContext(recorder, fileName)!!
-        } catch (exception: Exception) {
+        } catch (_: Exception) {
             val foreignUri = ctx is VideoCaptureActivity && ctx.isOutputUriAvailable()
             if (!foreignUri) {
                 camConfig.onStorageLocationNotFound()
@@ -232,7 +239,7 @@ class VideoCapturer(private val mActivity: MainActivity) {
                     if (recordingCtx.isPendingMediaStoreUri) {
                         try {
                             removePendingFlagFromUri(ctx.contentResolver, uri)
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
                             ctx.showMessage(R.string.unable_to_save_video)
                         }
                     }
@@ -277,12 +284,18 @@ class VideoCapturer(private val mActivity: MainActivity) {
 
         val drawable = mActivity.captureButton.drawable
 
-        val gd: GradientDrawable = if (drawable is StateListDrawable) {
-            drawable.current as GradientDrawable
-        } else if (drawable is LayerDrawable) {
-            drawable.current as GradientDrawable
-        } else {
-            drawable as GradientDrawable
+        val gd: GradientDrawable = when (drawable) {
+            is StateListDrawable -> {
+                drawable.current as GradientDrawable
+            }
+
+            is LayerDrawable -> {
+                drawable.current as GradientDrawable
+            }
+
+            else -> {
+                drawable as GradientDrawable
+            }
         }
 
         val animator = ValueAnimator.ofFloat(dp16, dp8)
@@ -328,12 +341,18 @@ class VideoCapturer(private val mActivity: MainActivity) {
 
         val drawable = mActivity.captureButton.drawable
 
-        val gd: GradientDrawable = if (drawable is StateListDrawable) {
-            drawable.current as GradientDrawable
-        } else if (drawable is LayerDrawable) {
-            drawable.current as GradientDrawable
-        } else {
-            drawable as GradientDrawable
+        val gd: GradientDrawable = when (drawable) {
+            is StateListDrawable -> {
+                drawable.current as GradientDrawable
+            }
+
+            is LayerDrawable -> {
+                drawable.current as GradientDrawable
+            }
+
+            else -> {
+                drawable as GradientDrawable
+            }
         }
 
         val animator = ValueAnimator.ofFloat(dp8, dp16)

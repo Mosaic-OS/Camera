@@ -40,6 +40,7 @@ import androidx.camera.video.QualitySelector
 import androidx.camera.video.Recorder
 import androidx.camera.video.VideoCapture
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import app.grapheneos.camera.analyzer.QRAnalyzer
 import app.grapheneos.camera.ktx.markAs16by9Layout
 import app.grapheneos.camera.ktx.markAs4by3Layout
@@ -219,9 +220,8 @@ class CamConfig(private val mActivity: MainActivity) {
 
     val allowedFormats: ArrayList<BarcodeFormat> = arrayListOf()
 
-    private val cameraExecutor by lazy {
-        Executors.newSingleThreadExecutor()
-    }
+    private val cameraExecutorDelegate = lazy { Executors.newSingleThreadExecutor() }
+    private val cameraExecutor by cameraExecutorDelegate
 
     var videoCapture: VideoCapture<Recorder>? = null
 
@@ -230,6 +230,12 @@ class CamConfig(private val mActivity: MainActivity) {
     var iAnalyzer: ImageAnalysis? = null
 
     val mPlayer = TunePlayer(mActivity)
+
+    // Release resources owned by this CamConfig; call from MainActivity.onDestroy().
+    fun cleanup() {
+        mPlayer.release()
+        if (cameraExecutorDelegate.isInitialized()) cameraExecutor.shutdownNow()
+    }
 
     // note that Activities which implement SecureActivity interface (meaning they are accessible
     // from the lock screen) are forced to override getSharedPreferences()
@@ -256,7 +262,7 @@ class CamConfig(private val mActivity: MainActivity) {
         if (dateStr != null && uri != null) {
             val skip = type == ITEM_TYPE_IMAGE && mActivity is VideoOnlyActivity
             if (!skip) {
-                item = CapturedItem(type, dateStr, Uri.parse(uri))
+                item = CapturedItem(type, dateStr, uri.toUri())
             }
         }
         lastCapturedItem = item
@@ -329,7 +335,7 @@ class CamConfig(private val mActivity: MainActivity) {
     var gridType: GridType = SettingValues.Default.GRID_TYPE
         set(value) {
             val editor = commonPref.edit()
-            editor.putInt(SettingValues.Key.GRID, GridType.values().indexOf(value))
+            editor.putInt(SettingValues.Key.GRID, GridType.entries.indexOf(value))
             editor.apply()
 
             field = value
@@ -512,7 +518,7 @@ class CamConfig(private val mActivity: MainActivity) {
         set(value) {
             val cur = storageLocation
             if (cur != SettingValues.Default.STORAGE_LOCATION) {
-                CapturedItems.savePreviousSafTree(Uri.parse(cur), commonPref)
+                CapturedItems.savePreviousSafTree(cur.toUri(), commonPref)
             }
 
             val editor = commonPref.edit()
@@ -829,7 +835,7 @@ class CamConfig(private val mActivity: MainActivity) {
         val qrRep = "${SettingValues.Key.SCAN}_${BarcodeFormat.QR_CODE.name}"
 
         if (!commonPref.contains(qrRep)) {
-            for (format in BarcodeFormat.values()) {
+            for (format in BarcodeFormat.entries) {
                 val formatSRep = "${SettingValues.Key.SCAN}_${format.name}"
 
                 editor.putBoolean(
@@ -847,7 +853,7 @@ class CamConfig(private val mActivity: MainActivity) {
 
         editor.apply()
 
-        gridType = GridType.values()[commonPref.getInt(
+        gridType = GridType.entries.toTypedArray()[commonPref.getInt(
             SettingValues.Key.GRID,
             SettingValues.Default.GRID_TYPE_INDEX
         )]
@@ -876,7 +882,7 @@ class CamConfig(private val mActivity: MainActivity) {
 
         allowedFormats.clear()
 
-        for (format in BarcodeFormat.values()) {
+        for (format in BarcodeFormat.entries) {
             val formatSRep = "${SettingValues.Key.SCAN}_${format.name}"
 
             val isEnabled = commonPref.getBoolean(
@@ -958,7 +964,7 @@ class CamConfig(private val mActivity: MainActivity) {
         }
 
         if (photoQuality == 0) {
-            photoQuality = 95;
+            photoQuality = 95
         }
     }
 
@@ -1034,7 +1040,7 @@ class CamConfig(private val mActivity: MainActivity) {
         cameraProviderFuture.addListener(fun() {
             try {
                 cameraProvider = cameraProviderFuture.get()
-            } catch (e: ExecutionException) {
+            } catch (_: ExecutionException) {
                 mActivity.showMessage(mActivity.getString(R.string.camera_provider_init_failure))
                 return
             }
@@ -1055,7 +1061,7 @@ class CamConfig(private val mActivity: MainActivity) {
             extensionsManagerFuture.addListener({
                 try {
                     extensionsManager = extensionsManagerFuture.get()
-                } catch (e: ExecutionException) {
+                } catch (_: ExecutionException) {
                     mActivity.showMessage(mActivity.getString(R.string.extensions_manager_init_failure))
                 }
                 startCamera(forced = forced)
@@ -1076,7 +1082,7 @@ class CamConfig(private val mActivity: MainActivity) {
 
                 try {
                     tCameraSelector = em.getExtensionEnabledCameraSelector(tCameraSelector, currentMode.extensionMode)
-                } catch (e : IllegalArgumentException) {
+                } catch (_ : IllegalArgumentException) {
                     return false
                 }
             }
@@ -1222,7 +1228,7 @@ class CamConfig(private val mActivity: MainActivity) {
                             ?: rotation
                     )
 
-                    var resolutionSelectorBuilder = ResolutionSelector.Builder()
+                    val resolutionSelectorBuilder = ResolutionSelector.Builder()
                         .setAspectRatioStrategy(aspectRatioStrategy)
 
                     if (selectHighestResolution) {
@@ -1259,7 +1265,7 @@ class CamConfig(private val mActivity: MainActivity) {
 
         preview = previewBuilder.build().also {
             useCasesList.add(it)
-            it.setSurfaceProvider(mActivity.previewView.surfaceProvider)
+            it.surfaceProvider = mActivity.previewView.surfaceProvider
         }
 
         mActivity.forceUpdateOrientationSensor()
@@ -1315,7 +1321,7 @@ class CamConfig(private val mActivity: MainActivity) {
                     throw exception
                 }
             }
-        } catch (exception: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             mActivity.showMessage(mActivity.getString(R.string.bind_failure))
             return
         }
@@ -1530,7 +1536,7 @@ class CamConfig(private val mActivity: MainActivity) {
         val optionNames = arrayListOf<String>()
         val optionValues = arrayListOf<Boolean>()
 
-        for (format in BarcodeFormat.values()) {
+        for (format in BarcodeFormat.entries) {
 
             if (format in commonFormats) continue
 
@@ -1575,9 +1581,9 @@ class CamConfig(private val mActivity: MainActivity) {
             }
 
             commonPref.edit {
-                for (index in 0 until optionNames.size) {
+                for ((index, element) in optionNames.withIndex()) {
 
-                    val optionName = optionNames[index]
+                    val optionName = element
                     val optionValue = optionValues[index]
 
                     val formatSRep = "${SettingValues.Key.SCAN}_$optionName"

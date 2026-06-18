@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.storage.StorageManager
 import android.provider.DocumentsContract
 import android.provider.MediaStore
+import androidx.core.net.toUri
 import app.grapheneos.camera.CamConfig
 import app.grapheneos.camera.R
 import app.grapheneos.camera.capturer.DEFAULT_MEDIA_STORE_CAPTURE_PATH
@@ -19,7 +20,7 @@ import java.util.concurrent.RejectedExecutionException
 
 fun Throwable.printStackTraceToString(): String {
     val baos = ByteArrayOutputStream(1000)
-    this.printStackTrace(PrintStream(baos));
+    this.printStackTrace(PrintStream(baos))
     return baos.toString()
 }
 
@@ -31,7 +32,7 @@ fun getTreeDocumentUri(treeUri: Uri): Uri {
 fun ExecutorService.executeIfAlive(r: Runnable) {
     try {
         execute(r)
-    } catch (ignored: RejectedExecutionException) {
+    } catch (_: RejectedExecutionException) {
         check(this.isShutdown)
     }
 }
@@ -41,12 +42,14 @@ fun storageLocationToUiString(ctx: Context, sl: String): String {
         return "${ctx.getString(R.string.main_storage)}/$DEFAULT_MEDIA_STORE_CAPTURE_PATH"
     }
 
-    val uri = Uri.parse(sl)
+    val uri = sl.toUri()
     val indexOfId = if (DocumentsContract.isDocumentUri(ctx, uri)) 3 else 1
-    val locationId = uri.pathSegments[indexOfId]
+    // Guard against malformed/legacy/corrupt stored URIs whose path is shorter than expected.
+    val locationId = uri.pathSegments.getOrNull(indexOfId) ?: uri.lastPathSegment ?: return sl
 
     if (uri.host == SAF_URI_HOST_EXTERNAL_STORAGE) {
         val endOfVolumeId = locationId.lastIndexOf(':')
+        if (endOfVolumeId < 0) return locationId
         val volumeId = locationId.substring(0, endOfVolumeId)
 
         val volumeName = if (volumeId == "primary") {
@@ -72,7 +75,7 @@ fun storageLocationToUiString(ctx: Context, sl: String): String {
                 return it.getString(0)
             }
         }
-    } catch (ignored: Exception) {}
+    } catch (_: Exception) {}
 
     return locationId
 }

@@ -128,7 +128,7 @@ class App : Application() {
         isLocationFetchInProgress = true
         if (location == null) {
             val providers = if (applicationInfo.isSystemApp() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                listOf<String>(LocationManager.FUSED_PROVIDER)
+                listOf(LocationManager.FUSED_PROVIDER)
             } else {
                 locationManager.allProviders
             }

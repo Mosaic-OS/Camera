@@ -5,7 +5,6 @@ import android.animation.Animator
 import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -58,9 +57,12 @@ import androidx.camera.view.PreviewView.StreamState
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.scale
+import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.isVisible
 import androidx.core.view.marginTop
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updateMargins
@@ -565,7 +567,7 @@ open class MainActivity : AppCompatActivity(),
         }
 
         // If the preview of video capture activity isn't showing
-        if (!(this is VideoCaptureActivity && thirdOption.visibility == View.VISIBLE)) {
+        if (!(this is VideoCaptureActivity && thirdOption.isVisible)) {
             if (!isQRDialogShowing) {
                 camConfig.initializeCamera(true)
             }
@@ -842,7 +844,7 @@ open class MainActivity : AppCompatActivity(),
         settingsIcon.viewTreeObserver.addOnGlobalLayoutListener(
             object : ViewTreeObserver.OnGlobalLayoutListener {
                 override fun onGlobalLayout() {
-                    rootView.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                    settingsIcon.viewTreeObserver.removeOnGlobalLayoutListener(this)
                     val displayCutout = window.decorView.rootWindowInsets.displayCutout
                     val layoutParams = (settingsIcon.layoutParams as RelativeLayout.LayoutParams)
 
@@ -1156,7 +1158,7 @@ open class MainActivity : AppCompatActivity(),
             val tabLayout: TabLayout = dialogBinding.encodingTabs
             val textView = dialogBinding.scanResultText
 
-            val intentView = Intent(Intent.ACTION_VIEW, Uri.parse(rawText))
+            val intentView = Intent(Intent.ACTION_VIEW, rawText.toUri())
 
             if (packageManager.resolveActivity(intentView, 0L) != null) {
                 dialogBinding.openWith.setOnClickListener {
@@ -1200,7 +1202,7 @@ open class MainActivity : AppCompatActivity(),
             val ctc: ImageButton = dialogBinding.copyQrText
             ctc.setOnClickListener {
                 val clipboardManager = getSystemService(
-                    Context.CLIPBOARD_SERVICE
+                    CLIPBOARD_SERVICE
                 ) as ClipboardManager
                 val clipData = ClipData.newPlainText(
                     "text",
@@ -1577,10 +1579,8 @@ open class MainActivity : AppCompatActivity(),
             xDegrees
         }
 
-        val zAngle = zDegrees
-
         // If we are in photo mode and the countdown timer isn't running
-        if (!(camConfig.isVideoMode || camConfig.isVideoMode || cdTimer.isRunning)) {
+        if (!(camConfig.isVideoMode || camConfig.isQRMode || cdTimer.isRunning)) {
 
             if (gCircle.rotation != xAngle) {
                 gCircle.rotation = xAngle
@@ -1605,21 +1605,21 @@ open class MainActivity : AppCompatActivity(),
                 }
             }
 
-            Log.i(TAG, "zAngle: $zAngle")
+            Log.i(TAG, "zAngle: $zDegrees")
 
             val lzAngle = when {
-                zAngle < -45 -> {
+                zDegrees < -45 -> {
                     -45
                 }
-                zAngle > 45 -> {
+                zDegrees > 45 -> {
                     45
                 }
                 else -> {
-                    zAngle
+                    zDegrees
                 }
             }.toFloat()
 
-            if (zAngle.toInt() == 0) {
+            if (zDegrees.toInt() == 0) {
                 gLineX.setBackgroundResource(R.drawable.yellow_shadow_rect)
                 gLineZ.visibility = View.GONE
 
@@ -1684,6 +1684,7 @@ open class MainActivity : AppCompatActivity(),
         super.onDestroy()
         SensorOrientationChangeNotifier.clearInstance()
         thumbnailLoaderExecutor.shutdownNow()
+        if (::camConfig.isInitialized) camConfig.cleanup()
     }
 
     fun locationCamConfigChanged(required: Boolean) {
@@ -1807,7 +1808,7 @@ open class MainActivity : AppCompatActivity(),
                         val h = it.height.toDouble()
                         val ratio = max(w / side, h / side)
 
-                        bitmap = Bitmap.createScaledBitmap(it, (w / ratio).toInt(), (h / ratio).toInt(), true)
+                        bitmap = it.scale((w / ratio).toInt(), (h / ratio).toInt())
                         origBitmap.recycle()
                     }
                 } else if (item.type == ITEM_TYPE_IMAGE) {

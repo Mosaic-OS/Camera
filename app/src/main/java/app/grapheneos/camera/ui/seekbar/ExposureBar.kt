@@ -8,7 +8,6 @@ import android.os.Looper
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
-import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.AppCompatSeekBar
 import androidx.camera.core.ExposureState
@@ -57,18 +56,18 @@ class ExposureBar : AppCompatSeekBar {
     }
 
     fun showPanel() {
-        togglePanel(View.VISIBLE)
+        togglePanel(VISIBLE)
         closePanelHandler.removeCallbacks(closePanelRunnable)
         closePanelHandler.postDelayed(closePanelRunnable, PANEL_VISIBILITY_DURATION)
     }
 
     fun hidePanel() {
-        togglePanel(View.GONE)
+        togglePanel(GONE)
     }
 
     private fun togglePanel(visibility: Int) {
         val transition: Transition = Fade()
-        if (visibility == View.GONE) {
+        if (visibility == GONE) {
             transition.duration = 300
         } else {
             transition.duration = 0
@@ -86,6 +85,11 @@ class ExposureBar : AppCompatSeekBar {
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(h, w, oldh, oldw)
+    }
+
+    override fun onDetachedFromWindow() {
+        closePanelHandler.removeCallbacks(closePanelRunnable)
+        super.onDetachedFromWindow()
     }
 
     @Synchronized

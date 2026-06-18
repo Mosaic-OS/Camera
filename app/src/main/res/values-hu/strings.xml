@@ -1,0 +1,202 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="invalid_photo_quality_value">Érvénytelen érték van beállítva a fotóminőséghez</string>
+    <string name="app_name">Kamera</string>
+    <string name="camera_permission_dialog_title">Kameraengedély szükséges</string>
+    <string name="camera_permission_dialog_message">
+        Az alkalmazásnak engedélyre van szüksége a kamera működéséhez. Kérjük, adja meg a szükséges engedélyt a Beállításokban az alkalmazás használatához.
+    </string>
+
+    <string name="audio_permission_dialog_title">Hang engedély szükséges</string>
+    <string name="audio_permission_dialog_message">Az alkalmazásnak engedélyre van szüksége a mikrofonhoz való hozzáféréshez hangot tartalmazó videó rögzítéséhez. A konfiguráció folytatásához adja meg a szükséges engedélyt a Beállításokban. Ha nem szeretné, hogy a videóban hangot is tartalmazzon, egyszerűen letilthatja (és később a beállításokban engedélyezheti).</string>
+
+    <string name="location_permission_dialog_title">Helyadatok engedély szükséges</string>
+    <string name="location_permission_dialog_message">
+        Az alkalmazásnak helyengedélyre van szüksége a helyadat címkézéshez. Kérjük, adja meg a szükséges engedélyt a Beállításokban az alkalmazás használatához.
+    </string>
+
+    <string name="focus_ring">Fókusz gyűrű</string>
+    <string name="flip_camera">Flip kamera</string>
+    <string name="loading_camera">Kamera betöltése</string>
+    <string name="flash_mode">Vaku mód</string>
+    <string name="capture_mode">Rögzítési mód</string>
+    <string name="start_value_timer">00:00</string>
+    <string name="zoom_in">Nagyítás</string>
+    <string name="zoom_out">Kicsinyítés</string>
+    <string name="scan_result">Szkennelés eredménye</string>
+    <string name="share_qr_text">QR-szöveg megosztása</string>
+    <string name="open_with">Megnyitás ezzel</string>
+    <string name="copy_to_clipboard">Másolás a vágólapra</string>
+    <string name="retake">Újrafelvétel</string>
+    <string name="play_preview">Lejátszási előnézet</string>
+    <string name="toggle_button">Váltógomb</string>
+    <string name="aspect_ratio">Képarány</string>
+    <string name="toggle_flash">Vaku váltás</string>
+    <string name="grid_toggle">Rács kapcsoló</string>
+    <string name="include_audio">Tartalmazza a hangot</string>
+    <string name="enable_eis">EIS engedélyezése</string>
+    <string name="video_quality">Videó minősége</string>
+    <string name="optimize_for">Optimalizálás erre</string>
+    <string name="quality">Minőség</string>
+    <string name="latency">Késleltetés</string>
+    <string name="preview">Előnézet</string>
+    <string name="file_info">Fájl információ</string>
+    <string name="delete_file">Fájl törlése</string>
+    <string name="edit">Szerkesztés</string>
+    <string name="self_illumination">Önmegvilágítás</string>
+    <string name="focus_timeout">Fókusz tartás</string>
+    <string name="timer">Időzítő</string>
+    <string name="cancel_timer">Időzítő törlése</string>
+    <string name="video_capture_label">Videó rögzítése</string>
+
+    <string name="camera">KAMERA</string>
+    <string name="video">VIDEÓ</string>
+    <string name="portrait_mode">PORTRÉ</string>
+    <string name="hdr_mode">HDR</string>
+    <string name="night_mode">ÉJSZAKAI</string>
+    <string name="face_retouch_mode">ARC RETUSÁLÁS</string>
+    <string name="auto_mode">AUTOMATA</string>
+    <string name="qr_scan_mode">QR SZKENNER</string>
+    <string name="aspect_ratio_16_9">16:9</string>
+    <string name="aspect_ratio_4_3">4:3</string>
+    <string name="share_media">Média megosztása</string>
+    <string name="edit_with">Szerkesztés ezzel</string>
+    <string name="rec_without_audio">Indítsa el a felvételt hang nélkül</string>
+    <string name="qr_scan_toggle">QR szken kapcsoló</string>
+    <string name="qr_scan">QR kód</string>
+    <string name="data_matrix">Adatmátrix</string>
+    <string name="aztec_code">Azték kód</string>
+    <string name="more_options">További lehetőségek</string>
+    <string name="pdf_417">PDF 417</string>
+    <string name="more_settings">További beállítások</string>
+
+    <string name="general">Általános</string>
+
+    <string name="save_image_as_previewed">Előnézeti kép mentése</string>
+    <string name="save_as_image_preview_desc">A kimeneti kép mentése az előnézeten látható módon (kijavítja az inverziót az elülső kamerában)</string>
+
+    <string name="save_video_as_previewed">Előnézeti videó mentése</string>
+    <string name="save_as_video_preview_desc">A kimeneti videó mentése az előnézeten látható módon (kijavítja az inverziót az elülső kamerában)</string>
+
+    <string name="gyroscope_suggestions">Giroszkóp javaslatok</string>
+    <string name="gyroscope_setting_desc">Időnként vizuális javaslatokat kaphat egyenes/jó szögű képekhez</string>
+
+    <string name="camera_sounds">Kamera hangok</string>
+    <string name="camera_sounds_desc">Zárhang és egyéb hangjelzések</string>
+
+    <string name="storage">Tárhely</string>
+    <string name="storage_location">Tárolási hely</string>
+    <string name="image_file_name_format">Képfájl név formátuma</string>
+    <string name="video_file_name_format">Videó fájlnév formátuma</string>
+    <string name="revert_back_to_dcim">Térjen vissza a DCIM-hez</string>
+
+    <string name="image_quality">Képminőség</string>
+    <string name="image_quality_desc" formatted="false">Állítsa be az alkalmazás által rögzített kép minőségét 1% és 100% között. Ez a mező üresen hagyható, hogy elkerülje a képminőség explicit beállítását.</string>
+    <string name="photo">Fotó</string>
+    <string name="remove_exif_title">Az EXIF-adatok eltávolítása a rögzítés után</string>
+    <string name="remove_exif_subtitle">Megjegyzés: A helyadat-címkézés/helyadat opció független ettől a beállítástól</string>
+    <string name="video_setting_title">Videó</string>
+    <string name="degree_format">%d°</string>
+    <string name="percent_symbol">%</string>
+
+    <string name="location_is_disabled">A helymeghatározás le van tiltva</string>
+    <string name="settings">Beállítások</string>
+    <string name="enable">Be</string>
+    <string name="ok">OK</string>
+    <string name="yes">Igen</string>
+    <string name="no">Nem</string>
+    <string name="disable_audio">Hang letiltása</string>
+    <string name="copied_text_to_clipboard">Szöveg a vágólapra másolva</string>
+    <string name="share_text_via">Szöveg megosztása ezen keresztül</string>
+
+    <string name="unable_to_obtain_file_details">Nem sikerült lekérni a fájl részleteit</string>
+
+    <string name="no_editor_app_error">Előfordulhat, hogy nem rendelkezik megfelelő alkalmazással a tartalom szerkesztéséhez</string>
+    <string name="edit_not_allowed">A képek szerkesztése biztonságos módban nem engedélyezett.</string>
+    <string name="sharing_not_allowed">A képek megosztása biztonságos módban nem engedélyezett.</string>
+    <string name="edit_image">Kép szerkesztése</string>
+    <string name="share_image">Kép megosztása</string>
+    <string name="delete">Törlés</string>
+    <string name="delete_title">Biztos benne?</string>
+    <string name="deleted_successfully">A fájl sikeresen törölve</string>
+    <string name="deleting_unexpected_error">Váratlan hiba történt a fájl törlése közben</string>
+    <string name="delete_description">Biztosan törölni szeretné ezt a fájlt (%s)?</string>
+    <string name="cancel">Mégsem</string>
+    <string name="no_image">Kérjük, készítsen fényképet/videót, mielőtt megpróbálná megtekinteni őket.</string>
+
+    <string name="empty_gallery">A rögzített fényképek/videók nem találhatók</string>
+
+    <string name="bind_failure">Nem sikerült megnyitni a kamerát operációs rendszer vagy hardver probléma miatt. Próbálja meg újraindítani az eszközt.</string>
+    <string name="camera_provider_init_failure">Nem sikerült betölteni a kameraszolgáltatót operációs rendszer vagy hardverprobléma miatt. Próbálja meg újraindítani az eszközt.</string>
+    <string name="extensions_manager_init_failure">Nem sikerült betölteni a bővítménykezelőt operációs rendszer vagy hardverprobléma miatt. A bővítmény módok nem érhetők el. Próbálja meg újraindítani az eszközt.</string>
+    <string name="unsupported_taking_picture_while_recording">Az eszköz nem támogatja a képek készítését videó rögzítése közben a jelenlegi beállításokkal.</string>
+    <string name="location_unavailable">Nem sikerült csatolni a helyet a képhez/videóhoz, mivel jelenleg nem elérhető</string>
+    <string name="existing_no_image">Nem található kép. Kilépés az alkalmazáson belüli galériából.</string>
+    <string name="no_barcode_selected">Ügyeljen arra, hogy legalább egy vonalkód legyen kiválasztva kézi módban</string>
+    <string name="flash_unavailable_in_selected_mode">A vaku nem érhető el az aktuális módban.</string>
+    <string name="front_camera_unavailable">Az elülső kamera nem észlelhető. Kérjük, próbálja újra később!</string>
+    <string name="rear_camera_unavailable">A hátsó kamera nem észlelhető. Kérjük, próbálja újra később!</string>
+    <string name="qr_rear_camera_unavailable">Úgy tűnik, a hátsó kamera nem elérhető. Elülső kamera használata QR módhoz.</string>
+    <string name="folder_not_found">A tárolási hely nem található</string>
+    <string name="reverting_to_default_folder">Visszatérés az alapértelmezett DCIM-könyvtárhoz, mivel úgy tűnik, hogy a korábban kiválasztott egyéni tárolási helyet törölték. Kérjük, módosítsa a tárolási helyet egy másik mappára, ha szükséges.</string>
+    <string name="more_settings_unavailable_during_recording">Felvétel közben nem lehet tevékenységeket váltani</string>
+    <string name="toggle_geo_tagging_unsupported_while_recording">Folyamatos rögzítésnél nem lehet átkapcsolni a földrajzi címkézést</string>
+    <string name="flash_switch_unsupported">Ebben az üzemmódban nem lehet vaku módot váltani</string>
+    <string name="four_by_three_unsupported_in_video">A 4:3 nem támogatott videó módban</string>
+    <string name="flash_unavailable_in_current_mode">Ebben az üzemmódban nem érhető el a vaku</string>
+    <string name="unexpected_error_while_setting_focus_timeout">Váratlan hiba történt a fókusz megtartás beállítása közben</string>
+    <string name="unexpected_error_while_setting_timer">Váratlan hiba történt az időzítő beállítása közben</string>
+    <string name="storage_location_updated">A tárhely sikeresen frissítve erre: %s</string>
+    <string name="no_directory_selected">Nem választott ki könyvtárat</string>
+    <string name="choose_storage_location">Válassza ki a tárolási helyet</string>
+    <string name="are_you_sure">Biztos benne?</string>
+    <string name="revert_to_default_directory">Vissza szeretne térni az alapértelmezett könyvtárhoz?</string>
+    <string name="reverted_to_default_directory">Visszatért az alapértelmezett tárhelyre</string>
+    <string name="already_using_default_directory">Már az alapértelmezett tárhelyet használja</string>
+    <string name="photo_quality_was_set_to_auto">A fénykép minősége automatikus módra lett állítva</string>
+    <string name="photo_quality_number_limit" tools:ignore="PluralsCandidate">A fotó minősége csak %1$d és %2$d között lehet</string>
+    <string name="image_taken_in_this_mode_does_not_contain_extra_data">Az ebben a módban készült képek nem tartalmaznak extra EXIF ​​adatokat</string>
+    <string name="file_already_exists">A fájl itt található: %s</string>
+    <string name="file_does_not_exist">A fájl nem létezik itt: %s</string>
+    <string name="couldnt_exclude_qr_format">Nem sikerült kizárni a %s formátumot. Győződjön meg arról, hogy legalább egy formátum ki van választva kézi módban.</string>
+
+    <string name="capturing_image">Kép rögzítése…</string>
+    <string name="image_captured_successfully">A kép sikeresen rögzítve</string>
+    <string name="unable_to_capture_image">Nem sikerült rögzíteni a képet</string>
+    <string name="unable_to_capture_image_verbose">Nem sikerült rögzíteni a képet, hibakód: %d</string>
+    <string name="unable_to_save_image">Nem sikerült menteni a képet</string>
+    <string name="unable_to_save_image_verbose">Nem sikerült menteni a képet, hiba történt: %s</string>
+    <string name="show_details">Részletek megjelenítése</string>
+    <string name="recording_too_short_to_be_saved">A felvétel túl rövid a mentéshez</string>
+    <string name="unable_to_save_video">Nem sikerült menteni ezt a videót</string>
+    <string name="unable_to_save_video_verbose">A videó nem menthető, hibakód: %d</string>
+    <string name="error_during_recording">Hiba történt az aktuális felvétel befejezésekor, hibakód: %d</string>
+    <string name="unable_to_access_output_file">Nem lehet hozzáférni a kimeneti fájlhoz</string>
+    <string name="please_wait_for_image_to_get_captured_before_sharing">Kérjük, várja meg, amíg a kép elkészül, mielőtt hosszú érintéssel megosztaná</string>
+
+    <string name="file_details">Fájl részletei</string>
+    <string name="file_name_generic">Fájlnév:</string>
+    <string name="not_found_generic">Nem található</string>
+    <string name="loading_generic">Betöltés…</string>
+    <string name="file_size">Méret:</string>
+    <string name="file_path">Elérési út:</string>
+    <string name="file_created_on">Létrehozva:</string>
+    <string name="last_modified_on">Utolsó módosítás:</string>
+
+    <string name="inaccessible_image">A(z) %s fotó nem érhető el</string>
+    <string name="inaccessible_video">A(z) %s videó nem érhető el</string>
+
+    <string name="main_storage">Belső tárhely</string>
+
+    <string name="zsl_setting_title">Használja a ZSL-t késleltetési módban</string>
+    <string name="zsl_setting_desc">Zero Shutter Lag (ZSL) funkciót használ késleltetési módban a gyorsabb rögzítés érdekében. Előfordulhat, hogy bizonyos eszközök hibás implementációval rendelkeznek ehhez.</string>
+    <string name="audio_permission_failed_in_recording">Nem lehet hangengedélyt kérni a felvételek között</string>
+
+    <string name="tap_to_mute_audio">Koppintson a hang elnémításához</string>
+    <string name="tap_to_unmute_audio">Koppintson a hang némításának feloldásához</string>
+
+    <string name="video_audio_recording_muted">Videó hangfelvétel kikapcsolva</string>
+    <string name="video_audio_recording_unmuted">Videó hangfelvétel bekapcsolva</string>
+    <string name="highest_res_setting">Legnagyobb felbontás használata</string>
+    <string name="highest_res_setting_desc">Engedélyezze a képek legmagasabb támogatott felbontásának használatát az alapértelmezett helyett. Ez bizonyos eszközökön nagyon nagy képekhez vezethet.</string>
+    <string name="wait_for_focus_lock">Várja meg a fókuszzárat</string>
+</resources>

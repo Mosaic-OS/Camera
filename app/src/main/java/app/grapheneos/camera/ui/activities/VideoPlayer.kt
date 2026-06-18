@@ -1,6 +1,5 @@
 package app.grapheneos.camera.ui.activities
 
-import android.graphics.drawable.ColorDrawable
 import android.media.AudioManager
 import android.media.MediaMetadataRetriever
 import android.net.Uri
@@ -12,6 +11,7 @@ import android.widget.RelativeLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -60,7 +60,7 @@ class VideoPlayer : AppCompatActivity() {
         setContentView(binding.root)
 
         supportActionBar?.let {
-            it.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this, R.color.appbar)))
+            it.setBackgroundDrawable(ContextCompat.getColor(this, R.color.appbar).toDrawable())
             it.setDisplayShowTitleEnabled(false)
             it.setDisplayHomeAsUpEnabled(true)
         }
@@ -119,9 +119,14 @@ class VideoPlayer : AppCompatActivity() {
                 videoView.setAudioFocusRequest(audioFocus)
 
                 videoView.setOnPreparedListener { _ ->
+                    // Re-check live state: onPrepared fires asynchronously and the activity
+                    // may have been paused/destroyed since this was scheduled.
+                    if (lifecycle.currentState == Lifecycle.State.DESTROYED) {
+                        return@setOnPreparedListener
+                    }
                     videoView.setMediaController(mediaController)
 
-                    if (lifecycleState == Lifecycle.State.RESUMED) {
+                    if (lifecycle.currentState == Lifecycle.State.RESUMED) {
                         videoView.start()
                     }
 
@@ -178,6 +183,8 @@ class VideoPlayer : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        // Release the VideoView's internal MediaPlayer / native resources.
+        binding.videoPlayer.stopPlayback()
         if (isSecureMode) {
             this.autoFinisher.stop()
         }

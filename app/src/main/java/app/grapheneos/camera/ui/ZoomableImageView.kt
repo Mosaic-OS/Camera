@@ -6,17 +6,13 @@ import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Matrix
-
-import android.view.ScaleGestureDetector
-
-import android.view.MotionEvent
-
 import android.graphics.PointF
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.view.ScaleGestureDetector.SimpleOnScaleGestureListener
-
 import androidx.appcompat.widget.AppCompatImageView
 import app.grapheneos.camera.R
 import app.grapheneos.camera.ui.activities.InAppGallery
@@ -57,6 +53,14 @@ class ZoomableImageView @JvmOverloads constructor(
 
     init {
         sharedConstructing()
+    }
+
+    override fun onDetachedFromWindow() {
+        // Avoid leaking this view (and the gallery activity) via a pending tap/animation
+        // when the page is swiped away in the ViewPager2 before they fire.
+        singleClickHandler.removeCallbacks(singleClickRunnable)
+        scaleAnimator?.cancel()
+        super.onDetachedFromWindow()
     }
 
     private val currentInstance: ZoomableImageView
@@ -347,7 +351,7 @@ class ZoomableImageView @JvmOverloads constructor(
         if (saveScale == 1f) {
             // Fit to screen.
             val scale: Float
-            if (drawable?.intrinsicWidth ?: 0 == 0 || drawable?.intrinsicHeight ?: 0 == 0) return
+            if ((drawable?.intrinsicWidth ?: 0) == 0 || (drawable?.intrinsicHeight ?: 0) == 0) return
             val bmWidth = drawable.intrinsicWidth
             val bmHeight = drawable.intrinsicHeight
 //            Log.d("bmSize", "bmWidth: $bmWidth bmHeight : $bmHeight")

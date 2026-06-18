@@ -45,10 +45,10 @@ android {
     namespace = "app.grapheneos.camera"
 
     defaultConfig {
-        applicationId = "app.grapheneos.camera"
+        applicationId = "app.mosaicos.camera"
         minSdk = 29
-        targetSdk = 35
-        versionCode = 90
+        targetSdk = 36
+        versionCode = 6
         versionName = versionCode.toString()
     }
 
@@ -85,15 +85,15 @@ android {
     }
 
     androidResources {
-        localeFilters += listOf("en")
+        localeFilters += listOf("en", "hu")
     }
 }
 
 dependencies {
     implementation("androidx.appcompat:appcompat:1.7.1")
-    implementation("com.google.android.material:material:1.13.0")
+    implementation("com.google.android.material:material:1.14.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
-    implementation("androidx.core:core-ktx:1.17.0")
+    implementation("androidx.core:core-ktx:1.18.0")
 
     val cameraVersion = "1.6.0-alpha01"
     implementation("androidx.camera:camera-core:$cameraVersion")
@@ -103,5 +103,5 @@ dependencies {
     implementation("androidx.camera:camera-view:$cameraVersion")
     implementation("androidx.camera:camera-extensions:$cameraVersion")
 
-    implementation("com.google.zxing:core:3.5.3")
+    implementation("com.google.zxing:core:3.5.4")
 }

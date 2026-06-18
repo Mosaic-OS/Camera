@@ -1,8 +1,6 @@
 package app.grapheneos.camera.ui.activities
 
-import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.graphics.Rect
 import android.os.Bundle
 import android.view.KeyEvent
@@ -16,7 +14,6 @@ import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.OnApplyWindowInsetsListener
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import app.grapheneos.camera.CamConfig
@@ -46,7 +43,7 @@ open class MoreSettings : AppCompatActivity(), TextView.OnEditorActionListener {
 
     private val dirPickerHandler = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
-    ) {
+    ) { it ->
         val intent = it.data
         val uri = intent?.data?.let {
             if (it.toString().contains(CapturedItems.SAF_TREE_SEPARATOR)) {
@@ -289,7 +286,7 @@ open class MoreSettings : AppCompatActivity(), TextView.OnEditorActionListener {
         if (view != null) {
             view.clearFocus()
             val imm: InputMethodManager =
-                getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(view.windowToken, 0)
         }
     }
@@ -304,7 +301,7 @@ open class MoreSettings : AppCompatActivity(), TextView.OnEditorActionListener {
         } else {
             try {
                 camConfig.photoQuality = Integer.parseInt(pQField.text.toString())
-            } catch (exception: Exception) {
+            } catch (_: Exception) {
                 // Revert back to the original value if invalid number was found
                 pQField.setText(camConfig.photoQuality.toString())
                 showMessage(getString(R.string.invalid_photo_quality_value))

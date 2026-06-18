@@ -138,8 +138,8 @@ class InAppGallery : AppCompatActivity() {
         }
     }
 
-    private fun getCurrentItem(): CapturedItem {
-        return gallerySliderAdapter!!.getCurrentItem()
+    private fun getCurrentItem(): CapturedItem? {
+        return gallerySliderAdapter?.getCurrentItem()
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -188,7 +188,7 @@ class InAppGallery : AppCompatActivity() {
             return
         }
 
-        val curItem = getCurrentItem()
+        val curItem = getCurrentItem() ?: return
 
         val editIntent = Intent(Intent.ACTION_EDIT).apply {
             setDataAndType(curItem.uri, curItem.mimeType())
@@ -199,7 +199,7 @@ class InAppGallery : AppCompatActivity() {
         if (withDefault) {
             try {
                 startActivity(editIntent)
-            } catch (ignored: ActivityNotFoundException) {
+            } catch (_: ActivityNotFoundException) {
                 showMessage(getString(R.string.no_editor_app_error))
             }
         } else {
@@ -211,7 +211,7 @@ class InAppGallery : AppCompatActivity() {
     }
 
     private fun deleteCurrentMedia() {
-        val curItem = getCurrentItem()
+        val curItem = getCurrentItem() ?: return
 
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.delete_title)
@@ -221,10 +221,10 @@ class InAppGallery : AppCompatActivity() {
 
                 val uri = curItem.uri
                 try {
-                    if (uri.authority == MediaStore.AUTHORITY) {
-                        res = contentResolver.delete(uri, null, null) > 0
+                    res = if (uri.authority == MediaStore.AUTHORITY) {
+                        contentResolver.delete(uri, null, null) > 0
                     } else {
-                        res = DocumentsContract.deleteDocument(contentResolver, uri)
+                        DocumentsContract.deleteDocument(contentResolver, uri)
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -243,7 +243,7 @@ class InAppGallery : AppCompatActivity() {
     }
 
     private fun showCurrentMediaDetails() {
-        val curItem = getCurrentItem()
+        val curItem = getCurrentItem() ?: return
 
         var relativePath: String? = null
         var fileName: String? = null
@@ -272,8 +272,11 @@ class InAppGallery : AppCompatActivity() {
             if (curItem.type == ITEM_TYPE_VIDEO) {
                 MediaMetadataRetriever().use {
                     it.setDataSource(this, curItem.uri)
-                    dateAdded = convertTimeForVideo(it.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DATE)!!)
-                    dateModified = dateAdded
+                    // METADATA_KEY_DATE is absent for some videos
+                    it.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DATE)?.let { date ->
+                        dateAdded = convertTimeForVideo(date)
+                        dateModified = dateAdded
+                    }
                 }
             } else {
                 contentResolver.openInputStream(curItem.uri)?.use { stream ->
@@ -313,7 +316,7 @@ class InAppGallery : AppCompatActivity() {
         detailsBuilder.append("\n\n")
 
         detailsBuilder.append(getString(R.string.file_path), "\n")
-        detailsBuilder.append(getRelativePath(this, curItem.uri, relativePath, fileName!!))
+        detailsBuilder.append(getRelativePath(this, curItem.uri, relativePath, fileName))
         detailsBuilder.append("\n\n")
 
         detailsBuilder.append(getString(R.string.file_size), "\n")
@@ -425,7 +428,7 @@ class InAppGallery : AppCompatActivity() {
             return
         }
 
-        val curItem = getCurrentItem()
+        val curItem = getCurrentItem() ?: return
 
         val share = Intent(Intent.ACTION_SEND)
         share.putExtra(Intent.EXTRA_STREAM, curItem.uri)
@@ -475,7 +478,7 @@ class InAppGallery : AppCompatActivity() {
             val systemBars =
                 insets.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.systemBars())
             view.y = -systemBars.bottom.toFloat()
-            snackBar.setAnchorView(view)
+            snackBar.anchorView = view
             insets
         }
 
@@ -492,7 +495,7 @@ class InAppGallery : AppCompatActivity() {
         asyncLoaderOfCapturedItems.execute {
             val unprocessedItems: List<CapturedItem> = try {
                 CapturedItems.get(this)
-            } catch (e: InterruptedException) {
+            } catch (_: InterruptedException) {
                 // activity was destroyed and exectutor.shutdownNow() was called, which interrupts
                 // executor threads
                 return@execute
@@ -573,8 +576,8 @@ class InAppGallery : AppCompatActivity() {
         var capturedItemPosition = 0
 
         if (lastViewedMediaItem != null) {
-            for (i in 0..<items.size) {
-                val capturedItem = items[i]
+            for ((i, element) in items.withIndex()) {
+                val capturedItem = element
                 if (capturedItem == lastViewedMediaItem) {
                     capturedItemPosition = i
                 }
@@ -663,7 +666,9 @@ class InAppGallery : AppCompatActivity() {
         super.onSaveInstanceState(outState)
 
         gallerySliderAdapter?.let {
-            outState.putParcelable(LAST_VIEWED_ITEM_KEY, it.items[gallerySlider.currentItem])
+            it.items.getOrNull(gallerySlider.currentItem)?.let { item ->
+                outState.putParcelable(LAST_VIEWED_ITEM_KEY, item)
+            }
         }
     }
 }

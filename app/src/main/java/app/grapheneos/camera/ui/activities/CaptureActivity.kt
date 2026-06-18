@@ -18,10 +18,10 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.scale
 import app.grapheneos.camera.R
 import app.grapheneos.camera.util.getParcelableExtra
 import java.io.ByteArrayOutputStream
-import java.lang.Exception
 import java.nio.ByteBuffer
 
 open class CaptureActivity : MainActivity() {
@@ -131,12 +131,17 @@ open class CaptureActivity : MainActivity() {
             object : ImageCapture.OnImageCapturedCallback() {
                 override fun onCaptureSuccess(image: ImageProxy) {
                     super.onCaptureSuccess(image)
-                    bitmap = imageProxyToBitmap(image, image.imageInfo.rotationDegrees.toFloat())
-                    showPreview()
-                    previewLoader.visibility = View.GONE
-                    showMessage(getString(R.string.image_captured_successfully))
-
+                    val captured = imageProxyToBitmap(image, image.imageInfo.rotationDegrees.toFloat())
                     image.close()
+                    previewLoader.visibility = View.GONE
+                    if (captured == null) {
+                        showMessage(getString(R.string.unable_to_capture_image))
+                        finishActivity(RESULT_CANCELED)
+                        return
+                    }
+                    bitmap = captured
+                    showPreview()
+                    showMessage(getString(R.string.image_captured_successfully))
                 }
 
                 override fun onError(exception: ImageCaptureException) {
@@ -210,7 +215,7 @@ open class CaptureActivity : MainActivity() {
                     it.write(bitmapData)
                 }
                 result = RESULT_OK
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 showMessage(getString(R.string.unable_to_save_image))
             }
 
@@ -224,12 +229,13 @@ open class CaptureActivity : MainActivity() {
         finish()
     }
 
-    private fun imageProxyToBitmap(image: ImageProxy, rotation: Float): Bitmap {
+    private fun imageProxyToBitmap(image: ImageProxy, rotation: Float): Bitmap? {
         val planeProxy = image.planes[0]
         val buffer: ByteBuffer = planeProxy.buffer
         val bytes = ByteArray(buffer.remaining())
         buffer.get(bytes)
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size).rotate(rotation)
+        // decodeByteArray returns null for an undecodable/corrupt buffer.
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.rotate(rotation)
     }
 
     private fun resizeImage(image: Bitmap): Bitmap {
@@ -243,7 +249,7 @@ open class CaptureActivity : MainActivity() {
         if (image.byteCount <= 1000000)
             return image
 
-        return Bitmap.createScaledBitmap(image, scaleWidth, scaleHeight, false)
+        return image.scale(scaleWidth, scaleHeight, false)
     }
 
     private fun Bitmap.rotate(degrees: Float): Bitmap {

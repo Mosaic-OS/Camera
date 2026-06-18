@@ -36,7 +36,7 @@ class GallerySliderAdapter(
 
     override fun onBindViewHolder(holder: GallerySlide, position: Int) {
         val mediaPreview: ZoomableImageView = holder.binding.slidePreview
-//        Log.d("GallerySliderAdapter", "postiion $position, preview ${System.identityHashCode(mediaPreview)}")
+//        Log.d("GallerySliderAdapter", "position $position, preview ${System.identityHashCode(mediaPreview)}")
         val playButton: ImageView = holder.binding.playButton
         val item = items[position]
 
@@ -49,13 +49,13 @@ class GallerySliderAdapter(
         val placeholderText = holder.binding.placeholderText.root
         if (atLeastOneBindViewHolderCall) {
             placeholderText.visibility = View.VISIBLE
-            placeholderText.setText("…")
+            placeholderText.text = "…"
         }
         atLeastOneBindViewHolderCall = true
 
         playButton.visibility = View.GONE
 
-        holder.currentPostion = position
+        holder.currentPosition = position
 
         gActivity.asyncImageLoader.executeIfAlive {
             val bitmap: Bitmap? = try {
@@ -65,10 +65,10 @@ class GallerySliderAdapter(
                     val source = ImageDecoder.createSource(gActivity.contentResolver, item.uri)
                     ImageDecoder.decodeBitmap(source, ImageDownscaler)
                 }
-            } catch (e: Exception) { null }
+            } catch (_: Exception) { null }
 
             gActivity.mainExecutor.execute {
-                if (holder.currentPostion == position) {
+                if (holder.currentPosition == position) {
                     if (bitmap != null) {
                         placeholderText.visibility = View.GONE
                         mediaPreview.visibility = View.VISIBLE
@@ -81,7 +81,7 @@ class GallerySliderAdapter(
                         }
 
                         mediaPreview.setOnClickListener {
-                            val curItem = getCurrentItem()
+                            val curItem = getCurrentItem() ?: return@setOnClickListener
                             if (curItem.type == ITEM_TYPE_VIDEO) {
                                 val intent = Intent(gActivity, VideoPlayer::class.java)
                                 intent.putExtra(VideoPlayer.VIDEO_URI, curItem.uri)
@@ -98,7 +98,7 @@ class GallerySliderAdapter(
                         } else { R.string.inaccessible_video }
 
                         placeholderText.visibility = View.VISIBLE
-                        placeholderText.setText(gActivity.getString(resId, item.dateString))
+                        placeholderText.text = gActivity.getString(resId, item.dateString)
                     }
                 } else {
                     bitmap?.recycle()
@@ -125,8 +125,9 @@ class GallerySliderAdapter(
         notifyItemRemoved(index)
     }
 
-    fun getCurrentItem(): CapturedItem {
-        return items[gActivity.gallerySlider.currentItem]
+    fun getCurrentItem(): CapturedItem? {
+        // currentItem can momentarily exceed items.size right after deleting the last item.
+        return items.getOrNull(gActivity.gallerySlider.currentItem)
     }
 
     override fun getItemCount(): Int {

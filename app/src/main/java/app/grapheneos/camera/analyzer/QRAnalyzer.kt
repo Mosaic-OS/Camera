@@ -40,7 +40,7 @@ class QRAnalyzer(private val mActivity: MainActivity) : Analyzer {
 
         supportedHints[DecodeHintType.POSSIBLE_FORMATS] =
             if (camConfig.scanAllCodes) {
-                BarcodeFormat.values().asList()
+                BarcodeFormat.entries
             } else {
                 camConfig.allowedFormats
             }
@@ -94,7 +94,7 @@ class QRAnalyzer(private val mActivity: MainActivity) : Analyzer {
             reader.decodeWithState(binaryBitmap).text?.let {
                 mActivity.onScanResultSuccess(it)
             }
-        } catch (e: ReaderException) {
+        } catch (_: ReaderException) {
             val invertedSource = source.invert()
             val invertedBinaryBitmap = BinaryBitmap(HybridBinarizer(invertedSource))
             reader.reset()
@@ -102,7 +102,7 @@ class QRAnalyzer(private val mActivity: MainActivity) : Analyzer {
                 reader.decodeWithState(invertedBinaryBitmap).text?.let {
                     mActivity.onScanResultSuccess(it)
                 }
-            } catch (e: ReaderException) {
+            } catch (_: ReaderException) {
             }
         }
 

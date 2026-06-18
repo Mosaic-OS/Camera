@@ -123,12 +123,12 @@ class SensorOrientationChangeNotifier private constructor(
             x = ((180 / Math.PI) * atan(x / sqrt(y * y + z * z))).toFloat()
             z = ((180 / Math.PI) * atan(z / sqrt(y * y + x * x))).toFloat()
 
-            if (z < Z_EXIT_MIN || z > Z_EXIT_MAX) {
+            if (z !in Z_EXIT_MIN..Z_EXIT_MAX) {
                 mainActivity.gCircleFrame.visibility = View.GONE
                 return
             }
 
-            if (x < X_EXIT_MIN || x > X_EXIT_MAX) {
+            if (x !in X_EXIT_MIN..X_EXIT_MAX) {
                 mainActivity.gCircleFrame.visibility = View.GONE
                 return
             }
@@ -185,7 +185,7 @@ class SensorOrientationChangeNotifier private constructor(
 
     private fun remove(listenerWR: WeakReference<Listener?>?) {
         if (listenerWR != null) mListeners.remove(listenerWR)
-        if (mListeners.size == 0) {
+        if (mListeners.isEmpty()) {
             onPause()
         }
     }

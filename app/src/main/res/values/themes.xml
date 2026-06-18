@@ -8,7 +8,8 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
-    <style name="Theme.App" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- DynamicColors so Settings follow the device's Material You palette -->
+    <style name="Theme.App" parent="Theme.Material3.DynamicColors.DayNight.NoActionBar">
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
 
         <item name="android:navigationBarColor">@android:color/transparent</item>

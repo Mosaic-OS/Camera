@@ -18,6 +18,7 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.internal.compat.workaround.ExifRotationAvailability
 import androidx.camera.core.internal.utils.ImageUtil
+import androidx.core.net.toUri
 import androidxc.camera.core.impl.utils.Exif
 import app.grapheneos.camera.CamConfig
 import app.grapheneos.camera.CapturedItem
@@ -38,7 +39,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicBoolean
 
 // see com.android.externalstorage.ExternalStorageProvider and
 // com.android.internal.content.FileSystemProvider
@@ -98,28 +98,24 @@ class ImageSaver(
     @SuppressLint("RestrictedApi")
     @Throws(ImageUtil.CodecFailedException::class)
     private fun extractJpegBytes(image: ImageProxy) {
-        try {
+        image.use { image ->
             cropRect = if (ImageUtil.shouldCropImage(image)) image.cropRect else null
             val imageFormat = image.format
 
-            origJpegBytes = if (imageFormat == ImageFormat.JPEG) {
-                ImageUtil.jpegImageToJpegByteArray(image)
-            } else if (imageFormat == ImageFormat.YUV_420_888) {
-                ImageUtil.yuvImageToJpegByteArray(image, cropRect, jpegQuality, 0)
-            } else {
-                throw IllegalStateException("unknown imageFormat $imageFormat")
+            origJpegBytes = when (imageFormat) {
+                ImageFormat.JPEG -> {
+                    ImageUtil.jpegImageToJpegByteArray(image)
+                }
+                ImageFormat.YUV_420_888 -> {
+                    ImageUtil.yuvImageToJpegByteArray(image, cropRect, jpegQuality, 0)
+                }
+                else -> {
+                    throw IllegalStateException("unknown imageFormat $imageFormat")
+                }
             }
 
             shouldUseExifOrientation = ExifRotationAvailability().shouldUseExifOrientation(image)
             orientation = image.imageInfo.rotationDegrees
-        } finally {
-            /*
-             from javadoc of the Image class:
-             Since Images are often directly produced or consumed by hardware components, they are
-             a limited resource shared across the system, and should be closed as soon as
-             they are no longer needed.
-             */
-            image.close()
         }
     }
 
@@ -309,7 +305,7 @@ class ImageSaver(
             return contentResolver.insert(CamConfig.imageCollectionUri, cv)
         } else {
             try {
-                val treeUri = Uri.parse(storageLocation)
+                val treeUri = storageLocation.toUri()
                 val treeDocumentUri = getTreeDocumentUri(treeUri)
                 return DocumentsContract.createDocument(contentResolver, treeDocumentUri, mimeType(), fileName())!!
             } catch (e: Exception) {

@@ -3,8 +3,8 @@ package app.grapheneos.camera.ui
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
-import android.widget.FrameLayout
 import android.view.MotionEvent
+import android.widget.FrameLayout
 
 class SettingsFrameLayout @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
@@ -53,7 +53,7 @@ class SettingsFrameLayout @JvmOverloads constructor(
     private var mInterceptTouchEventListener = dummyListener
 
     override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
-        parent.requestDisallowInterceptTouchEvent(disallowIntercept)
+        parent?.requestDisallowInterceptTouchEvent(disallowIntercept)
         mDisallowIntercept = disallowIntercept
     }
 

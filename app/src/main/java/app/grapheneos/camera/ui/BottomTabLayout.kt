@@ -3,7 +3,6 @@ package app.grapheneos.camera.ui
 import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
-import androidx.core.view.ViewCompat
 import app.grapheneos.camera.CameraMode
 import com.google.android.material.tabs.TabLayout
 
@@ -57,9 +56,9 @@ class BottomTabLayout @JvmOverloads constructor(
     override fun onScrollChanged(x: Int, y: Int, oldX: Int, oldY: Int) {
         super.onScrollChanged(x, y, oldX, oldY)
 
-        if (snapPoints.last() != 0) {
+        if (snapPoints.isNotEmpty() && snapPoints.last() != 0) {
 
-            for (i in 0 until snapPoints.size step 2) {
+            for (i in snapPoints.indices step 2) {
 
                 val start = snapPoints[i]
                 val end = snapPoints[i + 1]
@@ -76,7 +75,7 @@ class BottomTabLayout @JvmOverloads constructor(
     }
 
     fun getTabAtX(x: Int): Tab? {
-        for (i in 0 until snapPoints.size step 2) {
+        for (i in snapPoints.indices step 2) {
 
             val start = snapPoints[i]
             val end = snapPoints[i + 1]
