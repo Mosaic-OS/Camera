@@ -38,8 +38,8 @@ android {
         }
     }
 
-    compileSdk = 36
-    buildToolsVersion = "36.1.0"
+    compileSdk = 37
+    buildToolsVersion = "37.0.0"
     ndkVersion = "29.0.14206865"
 
     namespace = "app.grapheneos.camera"
@@ -47,8 +47,8 @@ android {
     defaultConfig {
         applicationId = "app.mosaicos.camera"
         minSdk = 29
-        targetSdk = 36
-        versionCode = 6
+        targetSdk = 37
+        versionCode = 7
         versionName = versionCode.toString()
     }
 
@@ -93,7 +93,7 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.7.1")
     implementation("com.google.android.material:material:1.14.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
-    implementation("androidx.core:core-ktx:1.18.0")
+    implementation("androidx.core:core-ktx:1.19.0")
 
     val cameraVersion = "1.6.0-alpha01"
     implementation("androidx.camera:camera-core:$cameraVersion")
