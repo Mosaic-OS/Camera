@@ -14,24 +14,19 @@
         Az alkalmazásnak helyengedélyre van szüksége a helyadat címkézéshez. Kérjük, adja meg a szükséges engedélyt a Beállításokban az alkalmazás használatához.
     </string>
 
-    <string name="focus_ring">Fókusz gyűrű</string>
     <string name="flip_camera">Flip kamera</string>
     <string name="loading_camera">Kamera betöltése</string>
     <string name="flash_mode">Vaku mód</string>
-    <string name="capture_mode">Rögzítési mód</string>
     <string name="start_value_timer">00:00</string>
-    <string name="zoom_in">Nagyítás</string>
-    <string name="zoom_out">Kicsinyítés</string>
+    <string name="torch">Zseblámpa</string>
     <string name="scan_result">Szkennelés eredménye</string>
     <string name="share_qr_text">QR-szöveg megosztása</string>
     <string name="open_with">Megnyitás ezzel</string>
     <string name="copy_to_clipboard">Másolás a vágólapra</string>
     <string name="retake">Újrafelvétel</string>
+    <string name="stop_scanning_all_formats">Az összes vonalkódformátum beolvasásának leállítása</string>
     <string name="play_preview">Lejátszási előnézet</string>
-    <string name="toggle_button">Váltógomb</string>
     <string name="aspect_ratio">Képarány</string>
-    <string name="toggle_flash">Vaku váltás</string>
-    <string name="grid_toggle">Rács kapcsoló</string>
     <string name="include_audio">Tartalmazza a hangot</string>
     <string name="enable_eis">EIS engedélyezése</string>
     <string name="video_quality">Videó minősége</string>
@@ -39,6 +34,7 @@
     <string name="quality">Minőség</string>
     <string name="latency">Késleltetés</string>
     <string name="preview">Előnézet</string>
+    <string name="play_video">Videó lejátszása</string>
     <string name="file_info">Fájl információ</string>
     <string name="delete_file">Fájl törlése</string>
     <string name="edit">Szerkesztés</string>
@@ -61,7 +57,6 @@
     <string name="share_media">Média megosztása</string>
     <string name="edit_with">Szerkesztés ezzel</string>
     <string name="rec_without_audio">Indítsa el a felvételt hang nélkül</string>
-    <string name="qr_scan_toggle">QR szken kapcsoló</string>
     <string name="qr_scan">QR kód</string>
     <string name="data_matrix">Adatmátrix</string>
     <string name="aztec_code">Azték kód</string>
@@ -85,8 +80,6 @@
 
     <string name="storage">Tárhely</string>
     <string name="storage_location">Tárolási hely</string>
-    <string name="image_file_name_format">Képfájl név formátuma</string>
-    <string name="video_file_name_format">Videó fájlnév formátuma</string>
     <string name="revert_back_to_dcim">Térjen vissza a DCIM-hez</string>
 
     <string name="image_quality">Képminőség</string>
@@ -115,6 +108,7 @@
     <string name="sharing_not_allowed">A képek megosztása biztonságos módban nem engedélyezett.</string>
     <string name="edit_image">Kép szerkesztése</string>
     <string name="share_image">Kép megosztása</string>
+    <string name="unable_to_edit_media">Nem sikerült szerkeszteni a fájlt</string>
     <string name="delete">Törlés</string>
     <string name="delete_title">Biztos benne?</string>
     <string name="deleted_successfully">A fájl sikeresen törölve</string>
@@ -126,6 +120,7 @@
     <string name="empty_gallery">A rögzített fényképek/videók nem találhatók</string>
 
     <string name="bind_failure">Nem sikerült megnyitni a kamerát operációs rendszer vagy hardver probléma miatt. Próbálja meg újraindítani az eszközt.</string>
+    <string name="quality_unsupported">A(z) %1$s nem támogatott ezen a kamerán. Felvétel eltérő minőségben.</string>
     <string name="camera_provider_init_failure">Nem sikerült betölteni a kameraszolgáltatót operációs rendszer vagy hardverprobléma miatt. Próbálja meg újraindítani az eszközt.</string>
     <string name="extensions_manager_init_failure">Nem sikerült betölteni a bővítménykezelőt operációs rendszer vagy hardverprobléma miatt. A bővítmény módok nem érhetők el. Próbálja meg újraindítani az eszközt.</string>
     <string name="unsupported_taking_picture_while_recording">Az eszköz nem támogatja a képek készítését videó rögzítése közben a jelenlegi beállításokkal.</string>
@@ -144,7 +139,7 @@
     <string name="four_by_three_unsupported_in_video">A 4:3 nem támogatott videó módban</string>
     <string name="flash_unavailable_in_current_mode">Ebben az üzemmódban nem érhető el a vaku</string>
     <string name="unexpected_error_while_setting_focus_timeout">Váratlan hiba történt a fókusz megtartás beállítása közben</string>
-    <string name="unexpected_error_while_setting_timer">Váratlan hiba történt az időzítő beállítása közben</string>
+    <string name="unexpected_error_while_setting_timer_duration">Váratlan hiba történt az időzítő beállítása közben</string>
     <string name="storage_location_updated">A tárhely sikeresen frissítve erre: %s</string>
     <string name="no_directory_selected">Nem választott ki könyvtárat</string>
     <string name="choose_storage_location">Válassza ki a tárolási helyet</string>
@@ -168,6 +163,7 @@
     <string name="recording_too_short_to_be_saved">A felvétel túl rövid a mentéshez</string>
     <string name="unable_to_save_video">Nem sikerült menteni ezt a videót</string>
     <string name="unable_to_save_video_verbose">A videó nem menthető, hibakód: %d</string>
+    <string name="unable_to_play_video">A videó nem játszható le</string>
     <string name="error_during_recording">Hiba történt az aktuális felvétel befejezésekor, hibakód: %d</string>
     <string name="unable_to_access_output_file">Nem lehet hozzáférni a kimeneti fájlhoz</string>
     <string name="please_wait_for_image_to_get_captured_before_sharing">Kérjük, várja meg, amíg a kép elkészül, mielőtt hosszú érintéssel megosztaná</string>
@@ -175,9 +171,9 @@
     <string name="file_details">Fájl részletei</string>
     <string name="file_name_generic">Fájlnév:</string>
     <string name="not_found_generic">Nem található</string>
-    <string name="loading_generic">Betöltés…</string>
     <string name="file_size">Méret:</string>
     <string name="file_path">Elérési út:</string>
+    <string name="duration">"Időtartam: "</string>
     <string name="file_created_on">Létrehozva:</string>
     <string name="last_modified_on">Utolsó módosítás:</string>
 
@@ -198,4 +194,29 @@
     <string name="highest_res_setting">Legnagyobb felbontás használata</string>
     <string name="highest_res_setting_desc">Engedélyezze a képek legmagasabb támogatott felbontásának használatát az alapértelmezett helyett. Ez bizonyos eszközökön nagyon nagy képekhez vezethet.</string>
     <string name="wait_for_focus_lock">Várja meg a fókuszzárat</string>
+    <string name="zoom">Nagyítás</string>
+    <string name="exposure_compensation">Expozíció-korrekció</string>
+    <string name="geo_tagging">Földrajzi címkézés</string>
+    <string name="capture">Rögzítés</string>
+    <string name="confirm">Megerősítés</string>
+    <string name="open_gallery">Galéria megnyitása</string>
+    <string name="pause_recording">Felvétel szüneteltetése</string>
+    <string name="resume_recording">Felvétel folytatása</string>
+    <string name="start_recording">Felvétel indítása</string>
+    <string name="stop_recording">Felvétel leállítása</string>
+    <string name="turn_torch_on">Zseblámpa bekapcsolása</string>
+    <string name="turn_torch_off">Zseblámpa kikapcsolása</string>
+    <string name="mute_audio">Hang némítása</string>
+    <string name="unmute_audio">Hang bekapcsolása</string>
+    <string name="flash_off">Vaku ki</string>
+    <string name="flash_on">Vaku be</string>
+    <string name="flash_auto">Automatikus vaku</string>
+    <string name="grid_off">Rács kikapcsolva</string>
+    <string name="grid_3x3">3x3-as rács</string>
+    <string name="grid_4x4">4x4-es rács</string>
+    <string name="grid_golden_ratio">Aranyarány-rács</string>
+    <string name="scan_all_formats">Olvasson be minden vonalkódformátumot</string>
+    <string name="unable_to_share_media">Nem sikerült megosztani ezt a fájlt</string>
+    <string name="extension_mode_unavailable">Ez az üzemmód ezen az eszközön nem érhető el.</string>
+    <string name="resolution">"Felbontás: "</string>
 </resources>

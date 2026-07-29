@@ -31,7 +31,8 @@ open class CaptureActivity : MainActivity() {
     }
 
     lateinit var outputUri: Uri
-    lateinit var bitmap: Bitmap
+
+    var bitmap: Bitmap? = null
 
     private lateinit var retakeIcon: ImageView
 
@@ -70,8 +71,8 @@ open class CaptureActivity : MainActivity() {
 
         }, CAPTURE_BUTTON_APPEARANCE_DELAY)
 
-        // Remove the modes tab layout as we do not want the user to be able to switch to
-        // another custom mode in this state
+        // Redundant now that no tabs get built here (see shouldShowCameraModeTabs), but kept so a
+        // regression in that override cannot hand the user a mode switcher mid-capture
         tabLayout.visibility = View.INVISIBLE
 
         // Remove the margin so that that the previewView can take some more space
@@ -92,6 +93,10 @@ open class CaptureActivity : MainActivity() {
         cancelButtonView.setOnClickListener {
             finish()
         }
+
+        // This is the only screen where the button has a drawable and does something, so it is
+        // also the only screen where it should be reachable by accessibility services.
+        cancelButtonView.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
 
         // Remove the third option/circle from the UI
         thirdOption.visibility = View.INVISIBLE
@@ -118,6 +123,12 @@ open class CaptureActivity : MainActivity() {
 
         // Display the activity
     }
+
+    /**
+     * Hiding the strip is not enough on its own: a fling reads the tab model rather than the strip,
+     * so it switched modes here anyway. There is no mode to switch to in a capture session.
+     */
+    override fun shouldShowCameraModeTabs() = false
 
     fun takePicture() {
 
@@ -194,8 +205,14 @@ open class CaptureActivity : MainActivity() {
 
         val resultIntent = Intent("inline-data")
 
-        if (::outputUri.isInitialized) {
+        val bitmap = bitmap
+        if (bitmap == null) {
+            setResult(RESULT_CANCELED)
+            finish()
+            return
+        }
 
+        if (::outputUri.isInitialized) {
             val bos = ByteArrayOutputStream()
 
             val cf: CompressFormat =
@@ -221,8 +238,9 @@ open class CaptureActivity : MainActivity() {
 
             setResult(result)
         } else {
-            bitmap = resizeImage(bitmap)
-            resultIntent.putExtra("data", bitmap)
+            val resized = resizeImage(bitmap)
+            this.bitmap = resized
+            resultIntent.putExtra("data", resized)
             setResult(RESULT_OK, resultIntent)
         }
 

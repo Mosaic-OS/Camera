@@ -1,11 +1,11 @@
 plugins {
-    id("com.android.application") version "9.3.1" apply false
+    alias(libs.plugins.android.application) apply false
 }
 
 buildscript {
     dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.0")
-        classpath("com.google.devtools.ksp:symbol-processing-gradle-plugin:2.3.9")
+        classpath(libs.kotlin.gradle.plugin)
+        classpath(libs.ksp.gradle.plugin)
     }
 }
 

@@ -10,7 +10,6 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
-import android.provider.Settings
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
@@ -27,6 +26,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.ToggleButton
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.StringRes
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
@@ -37,6 +37,7 @@ import androidx.camera.video.Recorder
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
+import androidx.core.view.ViewCompat
 import app.grapheneos.camera.CamConfig
 import app.grapheneos.camera.R
 import app.grapheneos.camera.databinding.SettingsBinding
@@ -91,8 +92,18 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
 
     private fun getString(@StringRes id: Int) = mActivity.getString(id)
 
+    // The panel window is not focusable, so it never sees the back event itself and back would
+    // otherwise fall through to the activity and close the app.
+    private val backCallback = object : OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() {
+            slideDialogUp()
+        }
+    }
+
     init {
         setContentView(binding.root)
+
+        mActivity.onBackPressedDispatcher.addCallback(mActivity, backCallback)
 
         dialog = binding.settingsDialog
         dialog.setOnClickListener {}
@@ -185,12 +196,13 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         aRToggle = binding.aspectRatioToggle
         aRToggle.setOnClickListener {
             if (camConfig.isVideoMode) {
-                aRToggle.isChecked = true
+                updateAspectRatioToggle(is16by9 = true)
                 mActivity.showMessage(
                     getString(R.string.four_by_three_unsupported_in_video)
                 )
             } else {
                 camConfig.toggleAspectRatio()
+                updateAspectRatioToggle(camConfig.aspectRatio == AspectRatio.RATIO_16_9)
             }
         }
 
@@ -293,21 +305,18 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
 
                     if (seconds == null) {
                         mActivity.showMessage(
-                            getString(R.string.unexpected_error_while_setting_timer)
+                            getString(R.string.unexpected_error_while_setting_timer_duration)
                         )
-                    } else if (seconds == 0) {
-                        mActivity.timerDuration = 0
-                        mActivity.cbText.visibility = View.INVISIBLE
                     } else {
-                        mActivity.timerDuration = seconds
-                        mActivity.cbText.text = selectedOption
-                        mActivity.cbText.visibility = View.VISIBLE
+                        updateTimerDuration(seconds)
                     }
 
                 }
 
                 override fun onNothingSelected(p0: AdapterView<*>?) {}
             }
+
+        restoreTimerDuration()
 
         mScrollView = binding.settingsScrollview
         mScrollViewContent = binding.settingsScrollviewContent
@@ -429,9 +438,8 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
     fun showOnlyRelevantSettings() {
         if (camConfig.isVideoMode) {
             includeAudioSetting.visibility = View.VISIBLE
-            enableEISSetting.visibility = View.GONE
             videoQualitySetting.visibility = View.VISIBLE
-            enableEISSetting.visibility = if (camConfig.isVideoStabilizationSupported()) {
+            enableEISSetting.visibility = if (camConfig.canApplyVideoStabilization()) {
                 View.VISIBLE
             } else {
                 View.GONE
@@ -481,6 +489,29 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         // Match the spinner entry by parsed duration so the selection is correct per-locale.
         val index = timeOptions.indexOfFirst { parseTimeOptionSeconds(it) == seconds }
         focusTimeoutSpinner.setSelection(if (index >= 0) index else 0, false)
+    }
+
+    private fun updateTimerDuration(duration: Int) {
+        mActivity.timerDuration = duration
+        mActivity.updateSelfTimerBadge()
+        // commonPref rather than modePref: the self-timer is not per-mode, and modePref is not
+        // assigned until the camera starts, which happens after this dialog is built.
+        camConfig.commonPref.edit()
+            .putInt(CamConfig.SettingValues.Key.SELF_TIMER_DURATION, duration)
+            .apply()
+    }
+
+    private fun restoreTimerDuration() {
+        val duration = camConfig.commonPref.getInt(
+            CamConfig.SettingValues.Key.SELF_TIMER_DURATION,
+            CamConfig.SettingValues.Default.SELF_TIMER_DURATION
+        )
+        // Apply directly: Spinner.setSelection() only posts its selection callback, so the duration
+        // would otherwise stay unset for a looper pass.
+        updateTimerDuration(duration)
+
+        val option = if (duration == 0) timeOptions[0] else "${duration}s"
+        timerSpinner.setSelection(timeOptions.indexOf(option).coerceAtLeast(0), false)
     }
 
     fun updateVideoQuality(choice: String, resCam: Boolean = true) {
@@ -614,7 +645,7 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
             )
             selfIlluminationAnimators.forEach { it.start() }
 
-            setBrightness(getSystemBrightness())
+            setBrightness(WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE)
         }
 
         wasSelfIlluminationOn = camConfig.selfIlluminate
@@ -673,14 +704,6 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         anim
     }
 
-    private fun getSystemBrightness(): Float {
-        return Settings.System.getInt(
-            context.contentResolver,
-            Settings.System.SCREEN_BRIGHTNESS,
-            -1
-        ) / 255f
-    }
-
     private fun setBrightness(brightness: Float) {
 
         val layout = mActivity.window.attributes
@@ -700,6 +723,11 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
     }
 
     fun slideDialogUp() {
+        // Restarting the animation would bounce the panel back into view and postpone the dismissal
+        // its end schedules, so ignore any further request to close while it plays out.
+        if (slideUpAnimation.hasStarted() && !slideUpAnimation.hasEnded()) {
+            return
+        }
         settingsFrame.startAnimation(slideUpAnimation)
     }
 
@@ -733,28 +761,41 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
 
     fun updateGridToggleUI() {
         mActivity.previewGrid.postInvalidate()
-        gridToggle.setImageResource(
-            when (camConfig.gridType) {
-                CamConfig.GridType.NONE -> R.drawable.grid_off_circle
-                CamConfig.GridType.THREE_BY_THREE -> R.drawable.grid_3x3_circle
-                CamConfig.GridType.FOUR_BY_FOUR -> R.drawable.grid_4x4_circle
-                CamConfig.GridType.GOLDEN_RATIO -> R.drawable.grid_goldenratio_circle
-            }
-        )
+        // The description has to travel with the drawable: this control cycles through four
+        // states, so a fixed "Grid Toggle" label left a screen reader unable to report any of them
+        val (icon, description) = when (camConfig.gridType) {
+            CamConfig.GridType.NONE -> R.drawable.grid_off_circle to R.string.grid_off
+            CamConfig.GridType.THREE_BY_THREE -> R.drawable.grid_3x3_circle to R.string.grid_3x3
+            CamConfig.GridType.FOUR_BY_FOUR -> R.drawable.grid_4x4_circle to R.string.grid_4x4
+            CamConfig.GridType.GOLDEN_RATIO ->
+                R.drawable.grid_goldenratio_circle to R.string.grid_golden_ratio
+        }
+        gridToggle.setImageResource(icon)
+        gridToggle.contentDescription = mActivity.getString(description)
     }
 
     fun updateFlashMode() {
-        flashToggle.setImageResource(
-            if (camConfig.isFlashAvailable) {
-                when (camConfig.flashMode) {
-                    ImageCapture.FLASH_MODE_ON -> R.drawable.flash_on_circle
-                    ImageCapture.FLASH_MODE_AUTO -> R.drawable.flash_auto_circle
-                    else -> R.drawable.flash_off_circle
-                }
-            } else {
-                R.drawable.flash_off_circle
+        val (icon, description) = if (camConfig.isFlashAvailable) {
+            when (camConfig.flashMode) {
+                ImageCapture.FLASH_MODE_ON -> R.drawable.flash_on_circle to R.string.flash_on
+                ImageCapture.FLASH_MODE_AUTO -> R.drawable.flash_auto_circle to R.string.flash_auto
+                else -> R.drawable.flash_off_circle to R.string.flash_off
             }
-        )
+        } else {
+            R.drawable.flash_off_circle to R.string.flash_off
+        }
+        flashToggle.setImageResource(icon)
+        flashToggle.contentDescription = mActivity.getString(description)
+    }
+
+    /**
+     * The ratio itself is the toggle's on/off text, which its content description hides from
+     * accessibility services: announce it as the toggle's state instead.
+     */
+    private fun updateAspectRatioToggle(is16by9: Boolean) {
+        aRToggle.isChecked = is16by9
+        val ratio = if (is16by9) R.string.aspect_ratio_16_9 else R.string.aspect_ratio_4_3
+        ViewCompat.setStateDescription(aRToggle, mActivity.getString(ratio))
     }
 
     override fun show() {
@@ -764,9 +805,9 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         updateFlashMode()
 
         if (camConfig.isVideoMode) {
-            aRToggle.isChecked = true
+            updateAspectRatioToggle(is16by9 = true)
         } else {
-            aRToggle.isChecked = camConfig.aspectRatio == AspectRatio.RATIO_16_9
+            updateAspectRatioToggle(camConfig.aspectRatio == AspectRatio.RATIO_16_9)
         }
 
         torchToggle.isChecked = camConfig.isTorchOn
@@ -775,8 +816,14 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
 
         mActivity.settingsIcon.visibility = View.INVISIBLE
         super.show()
+        backCallback.isEnabled = true
 
         slideDialogDown()
+    }
+
+    override fun dismiss() {
+        backCallback.isEnabled = false
+        super.dismiss()
     }
 
     fun reloadQualities() {

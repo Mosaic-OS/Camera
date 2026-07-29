@@ -15,13 +15,15 @@ class VideoCaptureActivity : CaptureActivity() {
 
     private var savedUri: Uri? = null
 
+    private var previewPending = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         whiteOptionCircle = findViewById(R.id.white_option_circle)
         playPreview = findViewById(R.id.play_preview)
 
-        captureButton.setImageResource(R.drawable.recording)
+        setCaptureButtonIcon(R.drawable.recording, R.string.start_recording)
 
         captureButton.setOnClickListener OnClickListener@{
             if (videoCapturer.isRecording) {
@@ -54,9 +56,27 @@ class VideoCaptureActivity : CaptureActivity() {
 
         this.savedUri = savedUri
 
-        // previewView.bitmap is null if no preview frame has been delivered yet (e.g. recording
-        // stopped before the first frame). Avoid crashing; the video itself is already saved.
-        bitmap = previewView.bitmap ?: run {
+        if (!isStarted) {
+            previewPending = true
+            return
+        }
+
+        showRecordingPreview()
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        if (previewPending) {
+            previewPending = false
+            showRecordingPreview()
+        }
+    }
+
+    private fun showRecordingPreview() {
+        // Both sources are null if no frame was ever delivered; report it instead of
+        // showing a blank preview.
+        bitmap = previewView.bitmap ?: lastFrame ?: run {
             showMessage(getString(R.string.unable_to_capture_image))
             return
         }
