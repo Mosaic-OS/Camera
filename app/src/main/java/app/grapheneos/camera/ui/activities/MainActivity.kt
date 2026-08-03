@@ -108,6 +108,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.roundToInt
+import androidx.core.graphics.scale
+import androidx.core.net.toUri
+import androidx.core.view.isVisible
 
 open class MainActivity : AppCompatActivity(),
     OnTouchListener,
@@ -571,7 +574,7 @@ open class MainActivity : AppCompatActivity(),
         }
 
         // If the preview of video capture activity isn't showing
-        if (!(this is VideoCaptureActivity && thirdOption.visibility == View.VISIBLE)) {
+        if (!(this is VideoCaptureActivity && thirdOption.isVisible)) {
             if (!isQRDialogShowing) {
                 if (hasCameraPermission()) {
                     camConfig.initializeCamera(true)
@@ -1135,7 +1138,7 @@ open class MainActivity : AppCompatActivity(),
             val tabLayout: TabLayout = dialogBinding.encodingTabs
             val textView = dialogBinding.scanResultText
 
-            val intentView = Intent(Intent.ACTION_VIEW, Uri.parse(rawText))
+            val intentView = Intent(Intent.ACTION_VIEW, rawText.toUri())
 
             if (packageManager.resolveActivity(intentView, 0L) != null) {
                 dialogBinding.openWith.setOnClickListener {
@@ -1848,7 +1851,7 @@ open class MainActivity : AppCompatActivity(),
                         val h = it.height.toDouble()
                         val ratio = max(w / side, h / side)
 
-                        bitmap = Bitmap.createScaledBitmap(it, (w / ratio).toInt(), (h / ratio).toInt(), true)
+                        bitmap = it.scale((w / ratio).toInt(), (h / ratio).toInt())
                         origBitmap.recycle()
                     }
                 } else if (item.type == ITEM_TYPE_IMAGE) {
