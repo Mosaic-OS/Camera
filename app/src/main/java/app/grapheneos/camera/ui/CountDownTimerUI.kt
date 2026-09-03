@@ -5,10 +5,8 @@ import android.content.Context
 import android.os.CountDownTimer
 import android.util.AttributeSet
 import android.view.Gravity
-import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.appcompat.widget.AppCompatTextView
-import androidx.camera.core.AspectRatio
 import app.grapheneos.camera.CamConfig
 import app.grapheneos.camera.R
 import app.grapheneos.camera.ui.activities.CaptureActivity
@@ -102,14 +100,6 @@ class CountDownTimerUI @JvmOverloads constructor(
     }
 
     private fun beforeTimeStarts() {
-
-        val params: ViewGroup.LayoutParams = layoutParams
-        params.height = if (camConfig.aspectRatio == AspectRatio.RATIO_4_3) {
-            mActivity.previewView.width * 4 / 3
-        } else {
-            mActivity.previewView.height
-        }
-        layoutParams = params
 
         mActivity.settingsIcon.visibility = INVISIBLE
         mActivity.thirdOption.visibility = INVISIBLE

@@ -8,19 +8,21 @@ import android.app.Dialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
-import android.view.ViewTreeObserver.OnPreDrawListener
 import android.view.WindowManager
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -84,6 +86,10 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
     private var timerSetting: View
 
     var settingsFrame: View
+
+    // Region the panel was last sized for, so the sizing runs when it moves and not on every
+    // frame the panel is drawn in.
+    private val sizedForRegion = Rect()
 
     private var moreSettingsButton: View
 
@@ -152,23 +158,13 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
 
         settingsFrame = binding.settingsFrame
 
-        rootView.viewTreeObserver.addOnPreDrawListener(
-            object : OnPreDrawListener {
-                override fun onPreDraw(): Boolean {
-                    rootView.viewTreeObserver.removeOnPreDrawListener(this)
+        binding.root.viewTreeObserver.addOnPreDrawListener { updatePanelRegion() }
 
-                    settingsFrame.layoutParams =
-                        (settingsFrame.layoutParams as ViewGroup.MarginLayoutParams).let {
-                            val marginTop =
-                                (mActivity.rootView.layoutParams as ViewGroup.MarginLayoutParams).topMargin
-                            it.height = (marginTop + (rootView.measuredWidth * 4 / 3))
-                            it
-                        }
-
-                    return true
-                }
-            }
-        )
+        // The preview belongs to the activity's window, so resizing it schedules no traversal in
+        // this one: without this the panel would keep the bounds of the preview it was opened over.
+        mActivity.previewView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            updatePanelRegion()
+        }
 
         locToggle = binding.locationToggle
         locToggle.setOnClickListener {
@@ -401,6 +397,60 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
         binding.moreSettings.background = moreSettingsBackgroundDrawable
     }
 
+    /**
+     * The preview's rectangle, in the dialog window's coordinates. The panel is centred within
+     * the preview, and reading the preview is what keeps that true at any window size and aspect
+     * ratio — recomputing the geometry here would only be a second copy of it, free to disagree.
+     */
+    private fun previewRegion(): Rect? {
+        val preview = mActivity.previewView
+        if (preview.width == 0 || preview.height == 0) {
+            return null
+        }
+
+        val previewLocation = IntArray(2)
+        preview.getLocationOnScreen(previewLocation)
+
+        val rootLocation = IntArray(2)
+        binding.root.getLocationOnScreen(rootLocation)
+
+        val left = previewLocation[0] - rootLocation[0]
+        val top = previewLocation[1] - rootLocation[1]
+
+        return Rect(left, top, left + preview.width, top + preview.height)
+    }
+
+    /**
+     * Moves the panel onto the preview whenever the preview is not where it was last sized for.
+     * The activity declares orientation as a config change it handles itself rather than being
+     * recreated, so nothing else tells the panel it has been rotated — and it can be rotated, or
+     * have its aspect ratio toggled, while it is open rather than between [show]s.
+     */
+    private fun updatePanelRegion(): Boolean {
+        val region = previewRegion() ?: return true
+        if (region == sizedForRegion) {
+            return true
+        }
+
+        sizedForRegion.set(region)
+
+        settingsFrame.layoutParams = (settingsFrame.layoutParams as FrameLayout.LayoutParams)
+            .also {
+                it.gravity = Gravity.TOP or Gravity.START
+                it.leftMargin = region.left
+                it.topMargin = region.top
+                it.width = region.width()
+                it.height = region.height()
+            }
+
+        // The list is capped against the region, so it has to be measured against the new one too.
+        resize()
+
+        // Drop the frame instead of drawing the panel where it does not belong: the new bounds
+        // only take effect in the traversal the layout params above schedule.
+        return false
+    }
+
     private fun resize() {
         mScrollViewContent.viewTreeObserver.addOnGlobalLayoutListener(object :
             ViewTreeObserver.OnGlobalLayoutListener {
@@ -415,7 +465,9 @@ class SettingsDialog(val mActivity: MainActivity, themedContext: Context) :
                 val totalDialogHeight = moreSettingsButton.height + moreSettingsButtonTopPadding +
                         dialog.height
                 val availableWidth = dialog.width - (settingsDialogHorizontalMargin * 4)
-                val availableHeight = availableWidth - (totalDialogHeight - mScrollView.height)
+                val regionHeight = previewRegion()?.height() ?: binding.root.measuredHeight
+                val availableHeight = availableWidth.coerceAtMost(regionHeight) -
+                        (totalDialogHeight - mScrollView.height)
 
                 val height = if (mScrollViewContent.height < mScrollView.height) {
                     mScrollViewContent.height
