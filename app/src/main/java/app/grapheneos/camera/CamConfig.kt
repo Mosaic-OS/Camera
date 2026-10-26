@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
@@ -12,6 +13,7 @@ import android.provider.MediaStore
 import android.util.Log
 import android.util.Size
 import android.view.MotionEvent
+import android.view.SurfaceView
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
@@ -26,6 +28,7 @@ import androidx.camera.core.AspectRatio
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.CameraState
 import androidx.camera.core.DynamicRange
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
@@ -50,6 +53,7 @@ import androidx.camera.video.VideoCapture
 import androidx.camera.video.internal.muxer.MediaMuxerImpl
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.core.view.children
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import app.grapheneos.camera.analyzer.QRAnalyzer
@@ -284,6 +288,18 @@ class CamConfig(private val mActivity: MainActivity) {
 
         zoomState = zoomStateSource?.value
     }
+
+    private var cameraStateSource: LiveData<CameraState>? = null
+
+    // A new bind is first told the error the camera last closed with, and a camera that keeps
+    // failing mustn't be rebound in a loop, so only one that opened under this bind can be lost
+    private var boundCameraOpened = false
+
+    private val cameraStateObserver = Observer<CameraState> { onCameraStateChanged(it) }
+
+    private var cameraReturnCallback: CameraManager.AvailabilityCallback? = null
+
+    private var replacePreviewSurface = false
 
     var cameraProvider: ProcessCameraProvider? = null
     private var extensionsManager: ExtensionsManager? = null
@@ -722,6 +738,26 @@ class CamConfig(private val mActivity: MainActivity) {
                 Context.MODE_PRIVATE
             ).edit {
                 saveLastCapturedItem(item, this)
+            }
+        }
+
+        lastCapturedItem = item
+    }
+
+    /**
+     * Swaps a last captured item that is gone for [item], or for none. Only a screen that sees
+     * every item may [save] it, as the saved one has to be the newest of them all.
+     */
+    fun replaceLastCapturedItem(item: CapturedItem?, save: Boolean) {
+        if (save) {
+            commonPref.edit {
+                if (item != null) {
+                    saveLastCapturedItem(item, this)
+                } else {
+                    remove(SettingValues.Key.LAST_CAPTURED_ITEM_TYPE)
+                    remove(SettingValues.Key.LAST_CAPTURED_ITEM_DATE_STRING)
+                    remove(SettingValues.Key.LAST_CAPTURED_ITEM_URI)
+                }
             }
         }
 
@@ -1443,10 +1479,85 @@ class CamConfig(private val mActivity: MainActivity) {
         return cameraProvider?.hasCamera(tCameraSelector) ?: false
     }
 
+    private fun onCameraStateChanged(state: CameraState) {
+        when {
+            state.type == CameraState.Type.OPEN -> boundCameraOpened = true
+
+            // Closed on purpose
+            state.type == CameraState.Type.CLOSED && state.error == null -> {
+                boundCameraOpened = false
+            }
+
+            boundCameraOpened && state.error?.code == CameraState.ERROR_CAMERA_FATAL_ERROR -> {
+                boundCameraOpened = false
+                onCameraLost()
+            }
+        }
+    }
+
+    // Once a dead camera service is back, CameraX reopens the camera but can't stream into the old
+    // preview surface, so the camera stays dead until a rebind with a new one
+    private fun onCameraLost() {
+        val lostCamera = camera ?: return
+        Log.w(TAG, "Lost the camera, rebinding once it is available again")
+
+        mActivity.updateLastFrame()
+
+        if (mActivity.videoCapturer.isRecording) {
+            val message = if (mActivity.videoCapturer.isStartPending) {
+                R.string.recording_not_started_camera_lost
+            } else {
+                R.string.recording_stopped_camera_lost
+            }
+            mActivity.videoCapturer.stopRecording()
+            mActivity.showMessage(message)
+        }
+        mActivity.imageCapturer.cancelPendingCaptureRequest()
+
+        replacePreviewSurface = true
+
+        val cameraId = try {
+            Camera2CameraInfo.from(lostCamera.cameraInfo).cameraId
+        } catch (e: IllegalArgumentException) {
+            null
+        }
+        awaitCameraReturn(cameraId)
+    }
+
+    // Waits for this camera rather than any: CameraManager can still be reporting the dead
+    // service's statuses, which have every camera available but the one that was open
+    private fun awaitCameraReturn(cameraId: String?) {
+        stopAwaitingCameraReturn()
+        val callback = object : CameraManager.AvailabilityCallback() {
+            override fun onCameraAvailable(id: String) {
+                if (cameraId != null && id != cameraId) return
+                stopAwaitingCameraReturn()
+                // Otherwise resuming, or whatever unbound the camera, rebinds it
+                val preview = preview ?: return
+                if (mActivity.isStarted && cameraProvider?.isBound(preview) == true) {
+                    startCamera(forced = true)
+                }
+            }
+        }
+        cameraReturnCallback = callback
+        mActivity.getSystemService(CameraManager::class.java)
+            .registerAvailabilityCallback(ContextCompat.getMainExecutor(mActivity), callback)
+    }
+
+    fun stopAwaitingCameraReturn() {
+        val callback = cameraReturnCallback ?: return
+        cameraReturnCallback = null
+        mActivity.getSystemService(CameraManager::class.java)
+            .unregisterAvailabilityCallback(callback)
+    }
+
     // Start the camera with latest hard configuration
     @SuppressLint("RestrictedApi")
     fun startCamera(forced: Boolean = false) {
         if ((!forced && camera != null) || cameraProvider == null) return
+
+        // CameraX retries the open until the camera service is back
+        stopAwaitingCameraReturn()
 
         // Cancel any pending capture requests
         mActivity.imageCapturer.cancelPendingCaptureRequest()
@@ -1492,8 +1603,23 @@ class CamConfig(private val mActivity: MainActivity) {
         // the camera that is being currently used gets unbind
         mActivity.updateLastFrame()
 
+        mActivity.videoCapturer.abandonDeferredStart()
+
+        cameraStateSource?.removeObserver(cameraStateObserver)
+        cameraStateSource = null
+
         // Unbind/close all other camera(s) [if any]
         cameraProvider?.unbindAll()
+
+        if (replacePreviewSurface) {
+            replacePreviewSurface = false
+            // PreviewView keeps its SurfaceView, and its surface, for a same-size rebind, and
+            // hiding and showing it replaces the surface. A TextureView is new on every rebind.
+            mActivity.previewView.children.filterIsInstance<SurfaceView>().forEach {
+                it.visibility = View.INVISIBLE
+                it.visibility = View.VISIBLE
+            }
+        }
 
         val extMode = currentMode.extensionMode
         var appliedExtension: Pair<Int, Int>? = null
@@ -1853,6 +1979,11 @@ class CamConfig(private val mActivity: MainActivity) {
         handler.removeCallbacks(attachZoomState)
         handler.post(attachZoomState)
 
+        boundCameraOpened = false
+        cameraStateSource = camera?.cameraInfo?.cameraState?.also {
+            it.observe(mActivity, cameraStateObserver)
+        }
+
         mActivity.zoomBar.updateThumb(false)
 
         camera?.cameraInfo?.exposureState?.let { mActivity.exposureBar.setExposureConfig(it) }
@@ -2052,6 +2183,14 @@ class CamConfig(private val mActivity: MainActivity) {
                         mActivity.finalizeMode(tab)
                     }
                     false
+                }
+                // A tap has committed its tab on the finger's lift, and still holds it pressed
+                // when it clicks it. A click from an accessibility service or a key has no touch
+                // to do that, and on its own would only select the tab.
+                tab.view.setOnClickListener {
+                    if (!it.isPressed) {
+                        mActivity.finalizeMode(tab)
+                    }
                 }
                 tab.tag = mode
 
