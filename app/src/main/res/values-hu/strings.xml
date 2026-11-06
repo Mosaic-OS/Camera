@@ -219,4 +219,7 @@
     <string name="unable_to_share_media">Nem sikerült megosztani ezt a fájlt</string>
     <string name="extension_mode_unavailable">Ez az üzemmód ezen az eszközön nem érhető el.</string>
     <string name="resolution">"Felbontás: "</string>
+    <string name="recording_stopped_storage_almost_full">A felvétel leállt, mert a tárhely majdnem megtelt</string>
+    <string name="recording_stopped_camera_lost">A felvétel leállt, mert a kamera működése megszakadt</string>
+    <string name="recording_not_started_camera_lost">A felvétel nem indult el, mert a kamera működése megszakadt</string>
 </resources>
