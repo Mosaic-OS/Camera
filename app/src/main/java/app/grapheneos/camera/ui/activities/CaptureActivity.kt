@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.scale
 import app.grapheneos.camera.R
 import app.grapheneos.camera.util.getParcelableExtra
+import app.grapheneos.camera.util.isForeignOutputUriAllowed
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 
@@ -238,6 +239,7 @@ open class CaptureActivity : MainActivity() {
             var result = RESULT_CANCELED
 
             try {
+                check(isForeignOutputUriAllowed(this, outputUri)) { "refused output uri $outputUri" }
                 contentResolver.openOutputStream(outputUri)?.use {
                     it.write(bitmapData)
                 }
